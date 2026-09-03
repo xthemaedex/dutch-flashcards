@@ -314,20 +314,20 @@ Live stack: **GitHub → Turso (libSQL) → Vercel**. Local dev is unchanged
 - **Env vars on Vercel:** `TURSO_DATABASE_URL`, `TURSO_AUTH_TOKEN`
   (read-only token), optionally `AUDIO_BASE_URL`.
 
-### Audio hosting (Vercel Blob)
+### Audio hosting (jsDelivr)
 
-Generated clips (`audio/**/*.mp3`) are hosted on a **Vercel Blob** store
-(`dutch-audio`, public) and referenced by the API when `AUDIO_BASE_URL` is set.
+Generated clips live on the orphan **`audio`** branch and are served free by
+**jsDelivr** (`https://cdn.jsdelivr.net/gh/<user>/dutch-flashcards@audio/audio/...`),
+which the API references via `AUDIO_BASE_URL`. No op limits, global CDN.
 
 ```bash
-# generate more clips (background; edge-tts is slow + flaky, re-run as needed)
+# generate more clips (background; edge-tts is slow/flaky, re-run as needed)
 python3 scripts/generate_audio.py --provider edge --voice nl-NL-MaartenNeural --redo-errors
-#   ...or much faster, no rate limits:
-#   python3 scripts/generate_audio.py --provider piper --piper-model voices/nl_NL-nathalie-medium.onnx
+#   ...or faster, no rate limits:  --provider piper --piper-model voices/<nl>.onnx
 
-# then push whatever's ready to the live site (idempotent, re-runnable):
+# then push to the CDN + refresh the DB (idempotent):
 bash scripts/refresh_audio.sh
 ```
 
-Blob free tier: 1 GB storage / ~10 GB transfer per month — the full ~15 k clips
-are ~250 MB, and the service worker caches each clip after first play.
+New clips appear on the live site within ~12 h (jsDelivr branch cache), sooner
+after the automatic purge. The service worker caches each played clip.
