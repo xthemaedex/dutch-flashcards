@@ -291,6 +291,8 @@ The word list will keep growing, so use a free **unmetered** engine —
 
 ## Deployment (phase 5.5)
 
+**Live:** https://dutch-flashcard-app.vercel.app  ·  repo auto-deploys on push to `main`.
+
 Live stack: **GitHub → Turso (libSQL) → Vercel**. Local dev is unchanged
 (`python3 scripts/serve.py`).
 
