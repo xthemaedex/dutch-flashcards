@@ -1,6 +1,6 @@
 /* sw.js — service worker: offline app shell + data/audio caching + daily reminder.
  * Bump CACHE on any shell change to force an update. */
-const CACHE = "dfx-v8";
+const CACHE = "dfx-v9";
 const SHELL = [
   "/", "/index.html", "/app.css", "/app.js", "/srs.js",
   "/manifest.webmanifest",
@@ -16,7 +16,8 @@ self.addEventListener("install", (e) => {
     caches.open(CACHE).then((c) =>
       c.addAll(SHELL).then(() =>
         Promise.all(DATA.map((u) =>
-          fetch(u).then((r) => r.ok && c.put(u, r)).catch(() => {})))
+          fetch(u, { cache: "reload" })   // bypass the HTTP cache — get fresh
+            .then((r) => r.ok && c.put(u, r)).catch(() => {})))
       )
     ).then(() => self.skipWaiting())
   );
@@ -42,7 +43,7 @@ function cacheFirst(req) {
 function staleWhileRevalidate(req) {
   return caches.open(CACHE).then((c) =>
     c.match(req).then((hit) => {
-      const net = fetch(req).then((res) => {
+      const net = fetch(req, { cache: "no-store" }).then((res) => {
         if (res.ok) c.put(req, res.clone());
         return res;
       }).catch(() => hit);
