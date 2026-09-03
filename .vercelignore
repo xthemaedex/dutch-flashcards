@@ -1,0 +1,12 @@
+# Only public/ (static) + api/ (functions) + package files are needed at deploy.
+data
+db
+audio
+images
+scripts
+node_modules
+.git
+.env
+.env.*
+*.md
+!README.md
