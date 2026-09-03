@@ -1,4 +1,5 @@
 // Shared helpers for the Vercel serverless API. Reads from Turso (libSQL).
+// build: audio-enabled
 import { createClient } from "@libsql/client";
 import { gzipSync } from "node:zlib";
 
