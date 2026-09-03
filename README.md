@@ -286,3 +286,28 @@ The word list will keep growing, so use a free **unmetered** engine —
    `nl-NL-MaartenNeural` / `nl-NL-ColetteNeural`. **Used for the demo audio here.**
 3. **Amazon Polly** free tier — 5M chars/month for the first 12 months.
 4. eSpeak NG — tiny, robotic; fallback for any failed file.
+
+---
+
+## Deployment (phase 5.5)
+
+Live stack: **GitHub → Turso (libSQL) → Vercel**. Local dev is unchanged
+(`python3 scripts/serve.py`).
+
+- **DB:** `scripts/migrate_to_turso.mjs` copies `db/flashcards.db` into Turso.
+  `TURSO_DATABASE_URL` + `TURSO_AUTH_TOKEN` come from the Turso dashboard
+  (see `.env.example`; `.env` is gitignored).
+
+    ```bash
+    npm install
+    node --env-file=.env scripts/migrate_to_turso.mjs --reset
+    ```
+
+- **API:** `api/*.js` — Vercel serverless functions (Node, `@libsql/client`)
+  replacing `serve.py`'s endpoints. Large payloads (`/api/details`) are gzipped
+  in-function to stay under Vercel's 4.5 MB response limit.
+- **Static:** `public/` (was `viewer/`) — served at the site root by Vercel.
+- **Audio:** not deployed yet. Functions emit `null` audio paths unless
+  `AUDIO_BASE_URL` is set (→ a Cloudflare R2 bucket, later); the app shows 🔇.
+- **Env vars on Vercel:** `TURSO_DATABASE_URL`, `TURSO_AUTH_TOKEN`
+  (read-only token), optionally `AUDIO_BASE_URL`.

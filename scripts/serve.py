@@ -20,7 +20,7 @@ from urllib.parse import urlparse, parse_qs
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.dirname(HERE)
 DB = os.path.join(ROOT, "db", "flashcards.db")
-VIEWER = os.path.join(ROOT, "viewer", "index.html")
+VIEWER = os.path.join(ROOT, "public", "index.html")
 AUDIO_DIR = os.path.join(ROOT, "audio")
 IMG_DIR = os.path.join(ROOT, "images")
 IMG_EXTS = (".jpg", ".jpeg", ".png", ".webp", ".gif")

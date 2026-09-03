@@ -1,0 +1,14 @@
+{
+  "name": "dutch-flashcards",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Offline-first Dutch vocabulary flashcard PWA",
+  "scripts": {
+    "migrate": "node scripts/migrate_to_turso.mjs",
+    "dev": "python3 scripts/serve.py"
+  },
+  "dependencies": {
+    "@libsql/client": "^0.14.0"
+  }
+}
