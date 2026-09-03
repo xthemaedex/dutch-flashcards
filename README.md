@@ -313,3 +313,21 @@ Live stack: **GitHub → Turso (libSQL) → Vercel**. Local dev is unchanged
   `AUDIO_BASE_URL` is set (→ a Cloudflare R2 bucket, later); the app shows 🔇.
 - **Env vars on Vercel:** `TURSO_DATABASE_URL`, `TURSO_AUTH_TOKEN`
   (read-only token), optionally `AUDIO_BASE_URL`.
+
+### Audio hosting (Vercel Blob)
+
+Generated clips (`audio/**/*.mp3`) are hosted on a **Vercel Blob** store
+(`dutch-audio`, public) and referenced by the API when `AUDIO_BASE_URL` is set.
+
+```bash
+# generate more clips (background; edge-tts is slow + flaky, re-run as needed)
+python3 scripts/generate_audio.py --provider edge --voice nl-NL-MaartenNeural --redo-errors
+#   ...or much faster, no rate limits:
+#   python3 scripts/generate_audio.py --provider piper --piper-model voices/nl_NL-nathalie-medium.onnx
+
+# then push whatever's ready to the live site (idempotent, re-runnable):
+bash scripts/refresh_audio.sh
+```
+
+Blob free tier: 1 GB storage / ~10 GB transfer per month — the full ~15 k clips
+are ~250 MB, and the service worker caches each clip after first play.
