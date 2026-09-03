@@ -9,6 +9,7 @@
     "dev": "python3 scripts/serve.py"
   },
   "dependencies": {
-    "@libsql/client": "^0.14.0"
+    "@libsql/client": "^0.14.0",
+    "@vercel/blob": "^2.8.0"
   }
 }

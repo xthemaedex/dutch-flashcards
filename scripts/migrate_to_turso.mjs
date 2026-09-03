@@ -22,6 +22,10 @@ if (!url || !authToken) {
   process.exit(1);
 }
 const RESET = process.argv.includes("--reset");
+// --only <table>: refresh just one table (DELETE + re-copy). Handy after
+// generate_audio.py + publish_audio.mjs to push new audio_assets rows.
+const onlyIdx = process.argv.indexOf("--only");
+const ONLY = onlyIdx !== -1 ? process.argv[onlyIdx + 1] : null;
 
 // tables in FK-safe insert order
 const TABLES = [
@@ -93,13 +97,22 @@ async function verify() {
 console.log("Local :", LOCAL_DB);
 console.log("Turso :", url, "\n");
 
-if (RESET) { console.log("Dropping existing Turso tables..."); await dropAll(); }
-console.log("Applying schema...");
-await applySchema();
 await run("PRAGMA foreign_keys=OFF");
-for (const t of TABLES) {
-  console.log(`Copying ${t}...`);
-  await copyTable(t);
+
+if (ONLY) {
+  if (!TABLES.includes(ONLY)) { console.error("--only must be one of:", TABLES.join(", ")); process.exit(1); }
+  console.log(`Refreshing only ${ONLY}...`);
+  await run(`DELETE FROM ${ONLY}`);
+  await copyTable(ONLY);
+} else {
+  if (RESET) { console.log("Dropping existing Turso tables..."); await dropAll(); }
+  console.log("Applying schema...");
+  await applySchema();
+  await run("PRAGMA foreign_keys=OFF");
+  for (const t of TABLES) {
+    console.log(`Copying ${t}...`);
+    await copyTable(t);
+  }
 }
 await verify();
 console.log("\nDone.");

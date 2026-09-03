@@ -18,3 +18,4 @@ __pycache__/
 .env.local
 .vercel
 node_modules/
+.env*

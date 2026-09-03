@@ -1,6 +1,6 @@
 /* sw.js — service worker: offline app shell + data/audio caching + daily reminder.
  * Bump CACHE on any shell change to force an update. */
-const CACHE = "dfx-v7";
+const CACHE = "dfx-v8";
 const SHELL = [
   "/", "/index.html", "/app.css", "/app.js", "/srs.js",
   "/manifest.webmanifest",
