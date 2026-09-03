@@ -1,0 +1,20 @@
+# regenerable / large — rebuild with scripts/fetch_sources.sh + build_corpus.py
+/data/sources/
+/db/flashcards.db
+/db/flashcards.db-shm
+/db/flashcards.db-wal
+/audio/word/
+/audio/sentence/
+/audio/conjugation/
+__pycache__/
+*.pyc
+
+
+/images/*
+!/images/README.md
+
+# deployment (created in later 5.5 steps, keep secrets out)
+.env
+.env.local
+.vercel
+node_modules/

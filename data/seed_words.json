@@ -1,0 +1,611 @@
+{
+  "meta": {
+    "batch": "B1 starter verification batch",
+    "generated_by": "Claude (in-session, no external API)",
+    "generated_at": "2026-09-03",
+    "language": "nl-NL",
+    "notes": "20 words incl. 3 verbs. Verb conjugations cover 7 tenses x 6 persons. Review this before scaling to full CEFR word sets."
+  },
+  "word_sets": [
+    {
+      "name": "B1 Starter Batch",
+      "cefr_level": "B1",
+      "theme": "mixed",
+      "description": "20-word verification batch spanning nouns, adjectives, adverbs and 3 verbs with full conjugation tables.",
+      "sort_order": 1
+    }
+  ],
+  "persons": ["ik", "jij", "hij", "wij", "jullie", "zij_mv"],
+  "tenses": ["presens", "imperfectum", "perfectum", "plusquamperfectum", "futurum", "futurum_exactum", "conditionalis"],
+  "words": [
+    {
+      "lemma": "huis",
+      "part_of_speech": "noun",
+      "translation_en": "house, home",
+      "definition_nl": "Een gebouw waarin mensen wonen.",
+      "definition_en": "A building where people live; a house or home.",
+      "article": "het",
+      "gender": "neuter",
+      "plural": "huizen",
+      "cefr_level": "A1",
+      "frequency_rank": 220,
+      "sets": ["B1 Starter Batch"],
+      "examples": [
+        {
+          "nl": "Ons huis heeft een grote tuin.",
+          "en": "Our house has a big garden.",
+          "blanked": "Ons ___ heeft een grote tuin."
+        }
+      ]
+    },
+    {
+      "lemma": "vrouw",
+      "part_of_speech": "noun",
+      "translation_en": "woman; wife",
+      "definition_nl": "Een volwassen persoon van het vrouwelijke geslacht; ook: echtgenote.",
+      "definition_en": "An adult female person; also: wife.",
+      "article": "de",
+      "gender": "feminine",
+      "plural": "vrouwen",
+      "cefr_level": "A1",
+      "frequency_rank": 190,
+      "sets": ["B1 Starter Batch"],
+      "examples": [
+        {
+          "nl": "Die vrouw werkt als arts in het ziekenhuis.",
+          "en": "That woman works as a doctor in the hospital.",
+          "blanked": "Die ___ werkt als arts in het ziekenhuis."
+        }
+      ]
+    },
+    {
+      "lemma": "man",
+      "part_of_speech": "noun",
+      "translation_en": "man; husband",
+      "definition_nl": "Een volwassen persoon van het mannelijke geslacht; ook: echtgenoot.",
+      "definition_en": "An adult male person; also: husband.",
+      "article": "de",
+      "gender": "masculine",
+      "plural": "mannen",
+      "cefr_level": "A1",
+      "frequency_rank": 95,
+      "sets": ["B1 Starter Batch"],
+      "examples": [
+        {
+          "nl": "De man naast mij las rustig een krant.",
+          "en": "The man next to me was quietly reading a newspaper.",
+          "blanked": "De ___ naast mij las rustig een krant."
+        }
+      ]
+    },
+    {
+      "lemma": "hond",
+      "part_of_speech": "noun",
+      "translation_en": "dog",
+      "definition_nl": "Een huisdier dat blaft en vaak wordt gehouden als gezelschap of waakdier.",
+      "definition_en": "A dog; a domestic animal that barks, often kept as a companion.",
+      "article": "de",
+      "gender": "masculine",
+      "plural": "honden",
+      "cefr_level": "A1",
+      "frequency_rank": 900,
+      "sets": ["B1 Starter Batch"],
+      "examples": [
+        {
+          "nl": "De hond rent elke ochtend door het park.",
+          "en": "The dog runs through the park every morning.",
+          "blanked": "De ___ rent elke ochtend door het park."
+        }
+      ]
+    },
+    {
+      "lemma": "boek",
+      "part_of_speech": "noun",
+      "translation_en": "book",
+      "definition_nl": "Een aantal bedrukte bladzijden die samen zijn gebonden om te lezen.",
+      "definition_en": "A book; bound printed pages meant for reading.",
+      "article": "het",
+      "gender": "neuter",
+      "plural": "boeken",
+      "cefr_level": "A1",
+      "frequency_rank": 520,
+      "sets": ["B1 Starter Batch"],
+      "examples": [
+        {
+          "nl": "Ik heb dit boek in een weekend uitgelezen.",
+          "en": "I finished this book in one weekend.",
+          "blanked": "Ik heb dit ___ in een weekend uitgelezen."
+        }
+      ]
+    },
+    {
+      "lemma": "water",
+      "part_of_speech": "noun",
+      "translation_en": "water",
+      "definition_nl": "De kleurloze vloeistof die mensen drinken en waarin je kunt zwemmen.",
+      "definition_en": "Water; the clear liquid people drink.",
+      "article": "het",
+      "gender": "neuter",
+      "plural": "wateren",
+      "cefr_level": "A1",
+      "frequency_rank": 410,
+      "sets": ["B1 Starter Batch"],
+      "examples": [
+        {
+          "nl": "Kun je een glas water voor me halen?",
+          "en": "Can you get me a glass of water?",
+          "blanked": "Kun je een glas ___ voor me halen?"
+        }
+      ]
+    },
+    {
+      "lemma": "stad",
+      "part_of_speech": "noun",
+      "translation_en": "city, town",
+      "definition_nl": "Een grote plaats met veel huizen, straten en inwoners.",
+      "definition_en": "A city; a large town.",
+      "article": "de",
+      "gender": "feminine",
+      "plural": "steden",
+      "cefr_level": "A1",
+      "frequency_rank": 300,
+      "sets": ["B1 Starter Batch"],
+      "examples": [
+        {
+          "nl": "Amsterdam is de grootste stad van Nederland.",
+          "en": "Amsterdam is the largest city in the Netherlands.",
+          "blanked": "Amsterdam is de grootste ___ van Nederland."
+        }
+      ]
+    },
+    {
+      "lemma": "kind",
+      "part_of_speech": "noun",
+      "translation_en": "child",
+      "definition_nl": "Een jong mens dat nog niet volwassen is.",
+      "definition_en": "A child.",
+      "article": "het",
+      "gender": "neuter",
+      "plural": "kinderen",
+      "cefr_level": "A1",
+      "frequency_rank": 150,
+      "sets": ["B1 Starter Batch"],
+      "examples": [
+        {
+          "nl": "Het kind speelde de hele middag buiten.",
+          "en": "The child played outside all afternoon.",
+          "blanked": "Het ___ speelde de hele middag buiten."
+        }
+      ]
+    },
+    {
+      "lemma": "school",
+      "part_of_speech": "noun",
+      "translation_en": "school",
+      "definition_nl": "Een plaats waar kinderen les krijgen en leren.",
+      "definition_en": "A school.",
+      "article": "de",
+      "gender": "feminine",
+      "plural": "scholen",
+      "cefr_level": "A1",
+      "frequency_rank": 280,
+      "sets": ["B1 Starter Batch"],
+      "examples": [
+        {
+          "nl": "Mijn zoon fietst elke dag naar school.",
+          "en": "My son bikes to school every day.",
+          "blanked": "Mijn zoon fietst elke dag naar ___."
+        }
+      ]
+    },
+    {
+      "lemma": "dag",
+      "part_of_speech": "noun",
+      "translation_en": "day",
+      "definition_nl": "Een periode van vierentwintig uur; ook: het deel daarvan waarin het licht is.",
+      "definition_en": "A day; also: the daytime.",
+      "article": "de",
+      "gender": "masculine",
+      "plural": "dagen",
+      "cefr_level": "A1",
+      "frequency_rank": 110,
+      "sets": ["B1 Starter Batch"],
+      "examples": [
+        {
+          "nl": "We hebben een hele dag in de bergen gewandeld.",
+          "en": "We hiked in the mountains for a whole day.",
+          "blanked": "We hebben een hele ___ in de bergen gewandeld."
+        }
+      ]
+    },
+    {
+      "lemma": "jaar",
+      "part_of_speech": "noun",
+      "translation_en": "year",
+      "definition_nl": "Een periode van twaalf maanden.",
+      "definition_en": "A year.",
+      "article": "het",
+      "gender": "neuter",
+      "plural": "jaren",
+      "cefr_level": "A1",
+      "frequency_rank": 85,
+      "sets": ["B1 Starter Batch"],
+      "examples": [
+        {
+          "nl": "Volgend jaar ga ik in Utrecht studeren.",
+          "en": "Next year I am going to study in Utrecht.",
+          "blanked": "Volgend ___ ga ik in Utrecht studeren."
+        }
+      ]
+    },
+    {
+      "lemma": "mooi",
+      "part_of_speech": "adjective",
+      "translation_en": "beautiful, nice",
+      "definition_nl": "Prettig om naar te kijken of te horen; fraai.",
+      "definition_en": "Beautiful; pleasant to look at or listen to.",
+      "article": null,
+      "gender": null,
+      "plural": null,
+      "cefr_level": "A1",
+      "frequency_rank": 260,
+      "sets": ["B1 Starter Batch"],
+      "examples": [
+        {
+          "nl": "Wat een mooi schilderij hangt daar aan de muur.",
+          "en": "What a beautiful painting is hanging there on the wall.",
+          "blanked": "Wat een ___ schilderij hangt daar aan de muur."
+        }
+      ]
+    },
+    {
+      "lemma": "snel",
+      "part_of_speech": "adjective",
+      "translation_en": "fast, quick",
+      "definition_nl": "Met een hoge snelheid; niet langzaam.",
+      "definition_en": "Fast, quick; also used as an adverb ('quickly').",
+      "article": null,
+      "gender": null,
+      "plural": null,
+      "cefr_level": "A2",
+      "frequency_rank": 470,
+      "sets": ["B1 Starter Batch"],
+      "examples": [
+        {
+          "nl": "De trein naar Rotterdam is erg snel.",
+          "en": "The train to Rotterdam is very fast.",
+          "blanked": "De trein naar Rotterdam is erg ___."
+        }
+      ]
+    },
+    {
+      "lemma": "moeilijk",
+      "part_of_speech": "adjective",
+      "translation_en": "difficult, hard",
+      "definition_nl": "Niet makkelijk; veel moeite kostend.",
+      "definition_en": "Difficult; requiring a lot of effort.",
+      "article": null,
+      "gender": null,
+      "plural": null,
+      "cefr_level": "A2",
+      "frequency_rank": 640,
+      "sets": ["B1 Starter Batch"],
+      "examples": [
+        {
+          "nl": "Deze oefening is te moeilijk voor beginners.",
+          "en": "This exercise is too difficult for beginners.",
+          "blanked": "Deze oefening is te ___ voor beginners."
+        }
+      ]
+    },
+    {
+      "lemma": "gelukkig",
+      "part_of_speech": "adjective",
+      "translation_en": "happy; fortunately",
+      "definition_nl": "Een blij en tevreden gevoel hebbend; als bijwoord: 'gelukkig' = het is een geluk dat.",
+      "definition_en": "Happy, content; as an adverb it means 'fortunately'.",
+      "article": null,
+      "gender": null,
+      "plural": null,
+      "cefr_level": "A2",
+      "frequency_rank": 720,
+      "sets": ["B1 Starter Batch"],
+      "examples": [
+        {
+          "nl": "Ze was heel gelukkig met haar nieuwe baan.",
+          "en": "She was very happy with her new job.",
+          "blanked": "Ze was heel ___ met haar nieuwe baan."
+        }
+      ]
+    },
+    {
+      "lemma": "altijd",
+      "part_of_speech": "adverb",
+      "translation_en": "always",
+      "definition_nl": "Op elk moment; steeds, zonder uitzondering.",
+      "definition_en": "Always; at all times.",
+      "article": null,
+      "gender": null,
+      "plural": null,
+      "cefr_level": "A1",
+      "frequency_rank": 210,
+      "sets": ["B1 Starter Batch"],
+      "examples": [
+        {
+          "nl": "Hij komt altijd te laat op vergaderingen.",
+          "en": "He is always late for meetings.",
+          "blanked": "Hij komt ___ te laat op vergaderingen."
+        }
+      ]
+    },
+    {
+      "lemma": "misschien",
+      "part_of_speech": "adverb",
+      "translation_en": "maybe, perhaps",
+      "definition_nl": "Het is mogelijk, maar niet zeker.",
+      "definition_en": "Maybe, perhaps; possibly but not certainly.",
+      "article": null,
+      "gender": null,
+      "plural": null,
+      "cefr_level": "A2",
+      "frequency_rank": 540,
+      "sets": ["B1 Starter Batch"],
+      "examples": [
+        {
+          "nl": "Misschien regent het morgen in het noorden.",
+          "en": "Maybe it will rain tomorrow in the north.",
+          "blanked": "___ regent het morgen in het noorden."
+        }
+      ]
+    },
+    {
+      "lemma": "werken",
+      "part_of_speech": "verb",
+      "translation_en": "to work",
+      "definition_nl": "Een taak of beroep uitvoeren; ook: goed functioneren (van een apparaat).",
+      "definition_en": "To work; to carry out a task or job; (of a device) to function.",
+      "article": null,
+      "gender": null,
+      "plural": null,
+      "infinitive": "werken",
+      "past_participle": "gewerkt",
+      "auxiliary": "hebben",
+      "is_separable": false,
+      "is_irregular": false,
+      "cefr_level": "A1",
+      "frequency_rank": 130,
+      "sets": ["B1 Starter Batch"],
+      "examples": [
+        {
+          "nl": "Ik werk sinds drie jaar bij een klein bedrijf.",
+          "en": "I have been working at a small company for three years.",
+          "blanked": "Ik ___ sinds drie jaar bij een klein bedrijf."
+        }
+      ],
+      "conjugations": {
+        "presens": {
+          "ik": "ik werk",
+          "jij": "jij werkt",
+          "hij": "hij werkt",
+          "wij": "wij werken",
+          "jullie": "jullie werken",
+          "zij_mv": "zij werken"
+        },
+        "imperfectum": {
+          "ik": "ik werkte",
+          "jij": "jij werkte",
+          "hij": "hij werkte",
+          "wij": "wij werkten",
+          "jullie": "jullie werkten",
+          "zij_mv": "zij werkten"
+        },
+        "perfectum": {
+          "ik": "ik heb gewerkt",
+          "jij": "jij hebt gewerkt",
+          "hij": "hij heeft gewerkt",
+          "wij": "wij hebben gewerkt",
+          "jullie": "jullie hebben gewerkt",
+          "zij_mv": "zij hebben gewerkt"
+        },
+        "plusquamperfectum": {
+          "ik": "ik had gewerkt",
+          "jij": "jij had gewerkt",
+          "hij": "hij had gewerkt",
+          "wij": "wij hadden gewerkt",
+          "jullie": "jullie hadden gewerkt",
+          "zij_mv": "zij hadden gewerkt"
+        },
+        "futurum": {
+          "ik": "ik zal werken",
+          "jij": "jij zult werken",
+          "hij": "hij zal werken",
+          "wij": "wij zullen werken",
+          "jullie": "jullie zullen werken",
+          "zij_mv": "zij zullen werken"
+        },
+        "futurum_exactum": {
+          "ik": "ik zal gewerkt hebben",
+          "jij": "jij zult gewerkt hebben",
+          "hij": "hij zal gewerkt hebben",
+          "wij": "wij zullen gewerkt hebben",
+          "jullie": "jullie zullen gewerkt hebben",
+          "zij_mv": "zij zullen gewerkt hebben"
+        },
+        "conditionalis": {
+          "ik": "ik zou werken",
+          "jij": "jij zou werken",
+          "hij": "hij zou werken",
+          "wij": "wij zouden werken",
+          "jullie": "jullie zouden werken",
+          "zij_mv": "zij zouden werken"
+        }
+      }
+    },
+    {
+      "lemma": "hebben",
+      "part_of_speech": "verb",
+      "translation_en": "to have",
+      "definition_nl": "Iets bezitten of ergens over beschikken; ook hulpwerkwoord voor het perfectum.",
+      "definition_en": "To have; to possess; also an auxiliary verb for perfect tenses.",
+      "article": null,
+      "gender": null,
+      "plural": null,
+      "infinitive": "hebben",
+      "past_participle": "gehad",
+      "auxiliary": "hebben",
+      "is_separable": false,
+      "is_irregular": true,
+      "cefr_level": "A1",
+      "frequency_rank": 6,
+      "sets": ["B1 Starter Batch"],
+      "examples": [
+        {
+          "nl": "Wij hebben twee katten en een hond.",
+          "en": "We have two cats and a dog.",
+          "blanked": "Wij ___ twee katten en een hond."
+        }
+      ],
+      "conjugations": {
+        "presens": {
+          "ik": "ik heb",
+          "jij": "jij hebt",
+          "hij": "hij heeft",
+          "wij": "wij hebben",
+          "jullie": "jullie hebben",
+          "zij_mv": "zij hebben"
+        },
+        "imperfectum": {
+          "ik": "ik had",
+          "jij": "jij had",
+          "hij": "hij had",
+          "wij": "wij hadden",
+          "jullie": "jullie hadden",
+          "zij_mv": "zij hadden"
+        },
+        "perfectum": {
+          "ik": "ik heb gehad",
+          "jij": "jij hebt gehad",
+          "hij": "hij heeft gehad",
+          "wij": "wij hebben gehad",
+          "jullie": "jullie hebben gehad",
+          "zij_mv": "zij hebben gehad"
+        },
+        "plusquamperfectum": {
+          "ik": "ik had gehad",
+          "jij": "jij had gehad",
+          "hij": "hij had gehad",
+          "wij": "wij hadden gehad",
+          "jullie": "jullie hadden gehad",
+          "zij_mv": "zij hadden gehad"
+        },
+        "futurum": {
+          "ik": "ik zal hebben",
+          "jij": "jij zult hebben",
+          "hij": "hij zal hebben",
+          "wij": "wij zullen hebben",
+          "jullie": "jullie zullen hebben",
+          "zij_mv": "zij zullen hebben"
+        },
+        "futurum_exactum": {
+          "ik": "ik zal gehad hebben",
+          "jij": "jij zult gehad hebben",
+          "hij": "hij zal gehad hebben",
+          "wij": "wij zullen gehad hebben",
+          "jullie": "jullie zullen gehad hebben",
+          "zij_mv": "zij zullen gehad hebben"
+        },
+        "conditionalis": {
+          "ik": "ik zou hebben",
+          "jij": "jij zou hebben",
+          "hij": "hij zou hebben",
+          "wij": "wij zouden hebben",
+          "jullie": "jullie zouden hebben",
+          "zij_mv": "zij zouden hebben"
+        }
+      }
+    },
+    {
+      "lemma": "zijn",
+      "part_of_speech": "verb",
+      "translation_en": "to be",
+      "definition_nl": "Bestaan of zich in een bepaalde toestand bevinden; koppelwerkwoord en hulpwerkwoord.",
+      "definition_en": "To be; to exist or be in a certain state; a linking and auxiliary verb.",
+      "article": null,
+      "gender": null,
+      "plural": null,
+      "infinitive": "zijn",
+      "past_participle": "geweest",
+      "auxiliary": "zijn",
+      "is_separable": false,
+      "is_irregular": true,
+      "cefr_level": "A1",
+      "frequency_rank": 2,
+      "sets": ["B1 Starter Batch"],
+      "examples": [
+        {
+          "nl": "De kinderen zijn nog op school.",
+          "en": "The children are still at school.",
+          "blanked": "De kinderen ___ nog op school."
+        }
+      ],
+      "conjugations": {
+        "presens": {
+          "ik": "ik ben",
+          "jij": "jij bent",
+          "hij": "hij is",
+          "wij": "wij zijn",
+          "jullie": "jullie zijn",
+          "zij_mv": "zij zijn"
+        },
+        "imperfectum": {
+          "ik": "ik was",
+          "jij": "jij was",
+          "hij": "hij was",
+          "wij": "wij waren",
+          "jullie": "jullie waren",
+          "zij_mv": "zij waren"
+        },
+        "perfectum": {
+          "ik": "ik ben geweest",
+          "jij": "jij bent geweest",
+          "hij": "hij is geweest",
+          "wij": "wij zijn geweest",
+          "jullie": "jullie zijn geweest",
+          "zij_mv": "zij zijn geweest"
+        },
+        "plusquamperfectum": {
+          "ik": "ik was geweest",
+          "jij": "jij was geweest",
+          "hij": "hij was geweest",
+          "wij": "wij waren geweest",
+          "jullie": "jullie waren geweest",
+          "zij_mv": "zij waren geweest"
+        },
+        "futurum": {
+          "ik": "ik zal zijn",
+          "jij": "jij zult zijn",
+          "hij": "hij zal zijn",
+          "wij": "wij zullen zijn",
+          "jullie": "jullie zullen zijn",
+          "zij_mv": "zij zullen zijn"
+        },
+        "futurum_exactum": {
+          "ik": "ik zal geweest zijn",
+          "jij": "jij zult geweest zijn",
+          "hij": "hij zal geweest zijn",
+          "wij": "wij zullen geweest zijn",
+          "jullie": "jullie zullen geweest zijn",
+          "zij_mv": "zij zullen geweest zijn"
+        },
+        "conditionalis": {
+          "ik": "ik zou zijn",
+          "jij": "jij zou zijn",
+          "hij": "hij zou zijn",
+          "wij": "wij zouden zijn",
+          "jullie": "jullie zouden zijn",
+          "zij_mv": "zij zouden zijn"
+        }
+      }
+    }
+  ]
+}

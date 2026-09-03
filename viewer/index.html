@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1">
+<title>Dutch Flashcards</title>
+<link rel="manifest" href="/manifest.webmanifest">
+<meta name="theme-color" content="#58CC02">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Dutch">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<link rel="icon" href="/favicon.png">
+<link rel="stylesheet" href="app.css">
+</head>
+<body>
+<header>
+  <h1>🇳🇱 Dutch Flashcards</h1>
+  <span class="stat" id="hdrStat"></span>
+  <span class="sp"></span>
+  <button class="streak-chip" id="streakChip" hidden title="Review streak"></button>
+  <button class="theme-btn" id="audioBtn" title="Settings">⚙️</button>
+  <button class="theme-btn" id="themeBtn" title="Theme">◐</button>
+</header>
+<div class="sessionbar" id="sessionbar" hidden><i id="sessionfill"></i></div>
+
+<main id="view"></main>
+
+<nav>
+  <button data-tab="review" class="active"><span class="ic">🎯</span>Review</button>
+  <button data-tab="browse"><span class="ic">📚</span>Sets</button>
+  <button data-tab="stats"><span class="ic">📊</span>Stats</button>
+  <button data-tab="search"><span class="ic">🔍</span>Search</button>
+</nav>
+
+<script src="srs.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
