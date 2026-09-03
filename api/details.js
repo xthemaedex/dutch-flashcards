@@ -53,5 +53,5 @@ export default async function handler(req, res) {
     }
   }
 
-  send(res, out, { maxAge: 0 });
+  send(res, out, { maxAge: 120 });
 }

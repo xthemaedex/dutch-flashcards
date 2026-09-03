@@ -419,20 +419,21 @@ async function renderCard() {
     ? esc(card.sentence_blanked).replace("___", "<b>______</b>")
     : (card.sentence_nl ? esc(card.sentence_nl) : `<span class="en">no example sentence</span>`);
 
+  const d = await detail(card.id);            // audio + full detail (from the bulk map)
+  const wAudio = d && d.audio ? d.audio.word : null;
   let body;
   if (!SESSION.flipped) {
     body = `
       ${tag}
       <div class="word">${esc(card.lemma)}</div>
       <div class="row" style="margin:2px 0 4px">
-        ${audioBtn(card.word_audio)}
-        <span class="en">${card.word_audio ? "hear the word" : "audio pending"}</span>
+        ${audioBtn(wAudio)}
+        <span class="en">${wAudio ? "hear the word" : "audio pending"}</span>
       </div>
       ${wordImage(card.lemma)}
       <div class="cloze">${cloze}</div>
       <div class="hint">tap card, or swipe → knew&nbsp;it / ← didn't</div>`;
   } else {
-    const d = await detail(card.id);
     body = tag + cardBack(card, d);
     prefetchNext();
   }
@@ -460,8 +461,8 @@ async function renderCard() {
 
   // auto-play (best effort; browsers may block until the first user gesture)
   if (!SESSION.flipped) {
-    if (AudioPrefs.autoWord && card.word_audio)
-      play(card.word_audio, view.querySelector(".audio-btn[data-a]"));
+    if (AudioPrefs.autoWord && wAudio)
+      play(wAudio, view.querySelector(".audio-btn[data-a]"));
   } else if (AudioPrefs.autoSentence) {
     const sb = view.querySelector(".sentence-full .audio-btn[data-a]");
     if (sb) play(sb.dataset.a, sb);
@@ -698,8 +699,8 @@ async function renderBrowseCard() {
       ${BR.flipped ? tag + cardBack(compat, d)
         : `${tag}<div class="word">${esc(w.lemma)}</div>
            <div class="row" style="margin:2px 0 4px">
-             ${audioBtn(w.word_audio)}
-             <span class="en">${w.word_audio ? "hear the word" : "audio pending"}</span></div>
+             ${audioBtn(d && d.audio ? d.audio.word : null)}
+             <span class="en">${d && d.audio && d.audio.word ? "hear the word" : "audio pending"}</span></div>
            ${wordImage(w.lemma)}
            <div class="cloze">${w.sentence_blanked
               ? esc(w.sentence_blanked).replace("___", "<b>______</b>")

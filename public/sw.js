@@ -1,6 +1,6 @@
 /* sw.js — service worker: offline app shell + data/audio caching + daily reminder.
  * Bump CACHE on any shell change to force an update. */
-const CACHE = "dfx-v10";
+const CACHE = "dfx-v11";
 const SHELL = [
   "/", "/index.html", "/app.css", "/app.js", "/srs.js",
   "/manifest.webmanifest",
@@ -35,7 +35,11 @@ self.addEventListener("activate", (e) => {
 function cacheFirst(req) {
   return caches.match(req).then((hit) =>
     hit || fetch(req).then((res) => {
-      if (res.ok) { const copy = res.clone(); caches.open(CACHE).then((c) => c.put(req, copy)); }
+      // cache 2xx and opaque (cross-origin audio) responses
+      if (res.ok || res.type === "opaque") {
+        const copy = res.clone();
+        caches.open(CACHE).then((c) => c.put(req, copy).catch(() => {}));
+      }
       return res;
     })
   );
