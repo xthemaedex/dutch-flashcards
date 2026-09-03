@@ -27,5 +27,5 @@ export default async function handler(req, res) {
       r.sentence_audio = audioUrl(r.sentence_audio);
     }
   }
-  send(res, rows, { maxAge: 3600 });
+  send(res, rows, { maxAge: 0 });
 }

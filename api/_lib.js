@@ -26,9 +26,12 @@ export function audioUrl(filePath) {
 
 // JSON response. Gzips large payloads in-function so /api/details (~8 MB raw)
 // stays well under Vercel's 4.5 MB response-body limit.
+// maxAge 0 => no edge cache (the service worker is the cache for those); the
+// browser/SW still revalidate, and content changes show up immediately.
 export function send(res, body, { status = 200, maxAge = 300 } = {}) {
   res.setHeader("Content-Type", "application/json; charset=utf-8");
-  res.setHeader("Cache-Control", `public, max-age=${maxAge}, s-maxage=${maxAge}`);
+  res.setHeader("Cache-Control",
+    maxAge > 0 ? `public, max-age=${maxAge}, s-maxage=${maxAge}` : "public, max-age=0, must-revalidate");
   const json = Buffer.from(JSON.stringify(body));
   if (json.length > 128 * 1024) {
     res.setHeader("Content-Encoding", "gzip");
