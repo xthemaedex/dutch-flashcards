@@ -1,6 +1,6 @@
 /* sw.js — service worker: offline app shell + data/audio caching + daily reminder.
  * Bump CACHE on any shell change to force an update. */
-const CACHE = "dfx-v9";
+const CACHE = "dfx-v10";
 const SHELL = [
   "/", "/index.html", "/app.css", "/app.js", "/srs.js",
   "/manifest.webmanifest",
@@ -56,14 +56,20 @@ self.addEventListener("fetch", (e) => {
   const req = e.request;
   if (req.method !== "GET") return;
   const url = new URL(req.url);
+
+  // audio may be same-origin (local dev) or on the Blob CDN (deployed) —
+  // cache-first either way so a played clip works offline afterwards
+  if (url.pathname.includes("/audio/") || url.hostname.endsWith(".blob.vercel-storage.com")) {
+    e.respondWith(cacheFirst(req));
+    return;
+  }
   if (url.origin !== self.location.origin) return;
 
   if (req.mode === "navigate") {
     e.respondWith(fetch(req).catch(() => caches.match("/index.html")));
     return;
   }
-  if (url.pathname.startsWith("/audio/") ||
-      url.pathname.startsWith("/img/") ||
+  if (url.pathname.startsWith("/img/") ||
       url.pathname.startsWith("/api/word/")) {
     e.respondWith(cacheFirst(req));
     return;

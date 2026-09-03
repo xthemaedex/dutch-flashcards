@@ -93,9 +93,12 @@ function play(path, btn) {
     if (btn) btn.classList.remove("playing");
     if (playingBtn === btn) playingBtn = null;
   };
+  // path may be an absolute URL (deployed: Vercel Blob) or a repo-relative
+  // path (local dev: /audio/...). Only prefix "/" for the relative case.
+  const src = /^https?:\/\//i.test(path) ? path : "/" + path.replace(/^\//, "");
   try {
     AUDIO.pause();
-    AUDIO = new Audio("/" + path);
+    AUDIO = new Audio(src);
     AUDIO.addEventListener("ended", clear);
     AUDIO.addEventListener("error", clear);
     AUDIO.play().catch(clear);   // autoplay may be blocked until first gesture
