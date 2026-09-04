@@ -1,4 +1,5 @@
-# Only public/ (static) + api/ (functions) + package files are needed at deploy.
+# The deploy is just the static site. Everything the app serves is in public/
+# (shell + public/data/*.json + icons). No build step, no functions.
 data
 db
 audio

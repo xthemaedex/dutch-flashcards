@@ -1,6 +1,7 @@
-/* app.js — Phase 2: core flashcard review flow (SM-2), plus a light browse/search.
- * Reads the Phase 1 database through serve.py's JSON API. Scheduling state is
- * client-side (see srs.js) so the review loop needs no network once cards load. */
+/* app.js — core flashcard review flow (SM-2), plus browse/search/stats.
+ * Data is three static JSON files under /data/ (built by scripts/build_static.py):
+ * cards.json, details.json, sets.json — no database, no API. Scheduling state is
+ * client-side (see srs.js) so nothing needs the network once the files load. */
 "use strict";
 
 const $ = (s) => document.querySelector(s);
@@ -93,8 +94,8 @@ function play(path, btn) {
     if (btn) btn.classList.remove("playing");
     if (playingBtn === btn) playingBtn = null;
   };
-  // path may be an absolute URL (deployed: Vercel Blob) or a repo-relative
-  // path (local dev: /audio/...). Only prefix "/" for the relative case.
+  // audio URLs are absolute jsDelivr URLs (baked into details.json); a bare
+  // relative path only happens in a non-deploy local build.
   const src = /^https?:\/\//i.test(path) ? path : "/" + path.replace(/^\//, "");
   try {
     AUDIO.pause();
@@ -121,7 +122,7 @@ function wireAudio(root) {
 
 /* per-word image (Phase 4): concrete nouns get a cached photo; abstract words,
  * particles and most verbs/adjectives have none and fall back to a text-only
- * card. The image + its CC attribution ride along in the /api/details payload
+ * card. The image + its CC attribution ride along in the details.json payload
  * (d.image = { url, attribution, license, source_url } | null). A broken image
  * tears its own figure out and drops the layout back to text-only. */
 function wordImage(d) {
@@ -226,14 +227,13 @@ let BYID = {};
 let cardsPromise = null;
 let DETAILS = null;            // id -> full card-back detail (one bulk payload)
 let detailsPromise = null;
-const detailCache = {};
 
 /* pull every card's back-of-card detail in one request; the SW precaches it so
  * the whole flow (definitions, conjugations, sentence audio) works offline. */
 function loadDetails() {
   if (DETAILS) return Promise.resolve(DETAILS);
   if (!detailsPromise) {
-    detailsPromise = api("/api/details")
+    detailsPromise = api("/data/details.json")
       .then((map) => { DETAILS = map; return map; })
       .catch((e) => { detailsPromise = null; throw e; });
   }
@@ -243,7 +243,7 @@ function loadDetails() {
 async function loadCards() {
   if (CARDS) return CARDS;
   if (!cardsPromise) {
-    cardsPromise = api("/api/cards").then((rows) => {
+    cardsPromise = api("/data/cards.json").then((rows) => {
       CARDS = rows;
       rows.forEach((c) => (BYID[c.id] = c));
       updateDueSummary();
@@ -258,13 +258,8 @@ async function loadCards() {
 }
 async function detail(id) {
   if (DETAILS && DETAILS[id]) return DETAILS[id];
-  if (detailCache[id]) return detailCache[id];
-  try {
-    const map = await loadDetails();           // bulk payload (SW-cached offline)
-    if (map[id]) return map[id];
-  } catch (e) { /* fall through to single fetch */ }
-  detailCache[id] = await api("/api/word/" + id);
-  return detailCache[id];
+  const map = await loadDetails();             // one static file, has every word
+  return map[id] || null;
 }
 
 /* ---------- nav ---------- */
@@ -322,8 +317,9 @@ async function render() {
           You're offline and the word list hasn't been saved to this device yet.<br><br>
           Connect once so the app can finish setting up, then it works offline.
           <br><br><button class="bigbtn" id="retry">Try again</button></div>`
-      : `<div class="empty">Error: ${esc(String(e))}<br><br>
-          Is the server running? <code>python3 scripts/serve.py</code></div>`;
+      : `<div class="empty">Couldn't load the word data.<br>
+          <span class="en">${esc(String(e))}</span><br><br>
+          <button class="bigbtn" id="retry">Try again</button></div>`;
     const rb = document.getElementById("retry");
     if (rb) rb.onclick = () => render();
   }
@@ -674,40 +670,34 @@ const BR = { setId: null, words: [], idx: 0, flipped: false };
 
 async function renderBrowse() {
   if (BR.setId) return renderBrowseCard();
-  const sets = await api("/api/sets");
+  await loadCards();
+  const sets = await api("/data/sets.json");
   view.innerHTML = `<div class="setgrid">${sets.map((s) => `
-    <button class="setcard" data-set="${s.id}">
+    <button class="setcard" data-cefr="${esc(s.cefr_level || "")}">
       <span class="lvl">${esc(s.cefr_level || "·")}</span>
       <span class="meta"><b>${esc(s.name)}</b><span>${s.word_count} words</span></span>
       <span class="chev">›</span></button>`).join("")}</div>`;
   view.querySelectorAll(".setcard").forEach((el) => {
-    el.onclick = async () => {
-      BR.setId = el.dataset.set; BR.idx = 0; BR.flipped = false;
-      view.innerHTML = `<div class="empty">Loading…</div>`;
-      const d = await api("/api/words?limit=8000&set=" + BR.setId);
-      BR.words = d.words;
+    el.onclick = () => {
+      const lvl = el.dataset.cefr;
+      BR.setId = lvl || "all"; BR.idx = 0; BR.flipped = false;
+      BR.words = CARDS.filter((c) => c.cefr === lvl);
       renderBrowseCard();
     };
   });
 }
 
 async function renderBrowseCard() {
-  const w = BR.words[BR.idx];
+  const w = BR.words[BR.idx];               // a cards.json entry: {id,lemma,pos,article,cefr,rank,...}
   const d = await detail(w.id);
-  const compat = {
-    id: w.id, lemma: w.lemma, pos: w.part_of_speech, article: w.article,
-    cefr: w.cefr_level, rank: w.frequency_rank,
-    sentence_blanked: w.sentence_blanked, sentence_nl: w.sentence_nl,
-    word_audio: w.word_audio,
-  };
   const tag = w.article ? `<span class="tag ${w.article}">${w.article}</span>`
-    : `<span class="tag pos">${esc(w.part_of_speech)}</span>`;
+    : `<span class="tag pos">${esc(w.pos)}</span>`;
   const img = BR.flipped ? "" : wordImage(d);
   view.innerHTML = `
     <div class="crumbs"><button id="bBack">Sets</button><span>›</span>
       <span>${BR.idx + 1} / ${BR.words.length}</span></div>
     <div class="rcard${img ? " has-image" : ""}">
-      ${BR.flipped ? tag + cardBack(compat, d)
+      ${BR.flipped ? tag + cardBack(w, d)
         : `${img}
            <div class="cardmeta">
              ${tag}
@@ -744,6 +734,22 @@ async function renderBrowseCard() {
  *  SEARCH
  * ===================================================================== */
 let searchT;
+function searchCards(q) {
+  q = q.toLowerCase();
+  const hits = [];
+  for (const c of CARDS) {
+    if (c.lemma.toLowerCase().includes(q) ||
+        (c.translation_en || "").toLowerCase().includes(q)) {
+      hits.push(c);
+      if (hits.length >= 60) break;
+    }
+  }
+  // exact-ish lemma matches first, then by frequency
+  hits.sort((a, b) =>
+    (a.lemma.toLowerCase() === q ? -1 : 0) - (b.lemma.toLowerCase() === q ? -1 : 0) ||
+    a.rank - b.rank);
+  return hits;
+}
 function renderSearch() {
   view.innerHTML = `<input class="search-in" id="sIn" placeholder="Search Dutch or English…" autocomplete="off"><div id="hits"></div>`;
   const inp = $("#sIn"); inp.focus();
@@ -752,17 +758,18 @@ function renderSearch() {
     searchT = setTimeout(async () => {
       const q = inp.value.trim();
       if (q.length < 2) { $("#hits").innerHTML = ""; return; }
-      const d = await api("/api/words?limit=60&q=" + encodeURIComponent(q));
-      $("#hits").innerHTML = d.words.map((w) => `
+      await loadCards();
+      const hits = searchCards(q);
+      $("#hits").innerHTML = hits.map((w) => `
         <button class="hit" data-id="${w.id}">
           ${w.article ? `<span class="tag ${w.article}">${w.article}</span>`
-            : `<span class="tag pos">${esc(w.part_of_speech)}</span>`}
+            : `<span class="tag pos">${esc(w.pos)}</span>`}
           <b>${esc(w.lemma)}</b><span class="tr">${esc(w.translation_en)}</span>
-          <span class="mini">#${w.frequency_rank}</span></button>`).join("")
+          <span class="mini">#${w.rank}</span></button>`).join("")
         || `<div class="empty">no matches</div>`;
       $("#hits").querySelectorAll(".hit").forEach((el) => {
-        el.onclick = async () => {
-          BR.words = d.words; BR.idx = d.words.findIndex((x) => x.id == el.dataset.id);
+        el.onclick = () => {
+          BR.words = hits; BR.idx = hits.findIndex((x) => x.id == el.dataset.id);
           BR.setId = "search"; BR.flipped = false;
           document.querySelectorAll("nav button").forEach((x) =>
             x.classList.toggle("active", x.dataset.tab === "browse"));
@@ -770,7 +777,7 @@ function renderSearch() {
           renderBrowseCard();
         };
       });
-    }, 170);
+    }, 140);
   };
 }
 
@@ -855,14 +862,8 @@ async function renderStats() {
 async function openCardById(id) {
   const c = BYID[id];
   if (!c) return;
-  const d = await api("/api/words?limit=1&q=" + encodeURIComponent(c.lemma));
-  BR.words = d.words.length ? d.words : [{
-    id: c.id, lemma: c.lemma, part_of_speech: c.pos, article: c.article,
-    cefr_level: c.cefr, frequency_rank: c.rank, translation_en: c.translation_en,
-    sentence_nl: c.sentence_nl, sentence_blanked: c.sentence_blanked,
-    word_audio: c.word_audio,
-  }];
-  BR.idx = Math.max(0, BR.words.findIndex((w) => w.id === id));
+  BR.words = [c];
+  BR.idx = 0;
   BR.setId = "single"; BR.flipped = true;
   document.querySelectorAll("nav button").forEach((x) =>
     x.classList.toggle("active", x.dataset.tab === "browse"));

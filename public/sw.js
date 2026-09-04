@@ -1,15 +1,15 @@
-/* sw.js — service worker: offline app shell + data/audio caching + daily reminder.
- * Bump CACHE on any shell change to force an update. */
-const CACHE = "dfx-v12";
+/* sw.js — service worker: offline app shell + static data + daily reminder.
+ * scripts/build_static.py --deploy bumps CACHE so a redeploy refreshes clients. */
+const CACHE = "dfx-v14";
 const SHELL = [
   "/", "/index.html", "/app.css", "/app.js", "/srs.js",
   "/manifest.webmanifest",
   "/icon-192.png", "/icon-512.png", "/icon-maskable-512.png",
   "/apple-touch-icon.png", "/favicon.png",
 ];
-// data the app can't run without — precached so a cold offline start works
+// static data the app can't run without — precached so a cold offline start works
 // (best-effort: a failure here must not abort the install)
-const DATA = ["/api/cards", "/api/details", "/api/sets", "/api/images"];
+const DATA = ["/data/cards.json", "/data/details.json", "/data/sets.json"];
 
 self.addEventListener("install", (e) => {
   e.waitUntil(
@@ -38,30 +38,18 @@ self.addEventListener("activate", (e) => {
   );
 });
 
-/* --- fetch strategies --- */
+/* --- fetch strategy: cache-first for everything same-origin ---
+ * The whole app is static (shell + /data/*.json). New content ships as a new
+ * deploy, which changes sw.js (build_static.py bumps CACHE), which re-runs
+ * install and refreshes the DATA files. So a plain cache-first is safe. */
 function cacheFirst(req) {
   return caches.match(req).then((hit) =>
     hit || fetch(req).then((res) => {
-      // cache 2xx and opaque (cross-origin audio) responses
       if (res.ok || res.type === "opaque") {
         const copy = res.clone();
         caches.open(CACHE).then((c) => c.put(req, copy).catch(() => {}));
       }
       return res;
-    })
-  );
-}
-function staleWhileRevalidate(req) {
-  return caches.open(CACHE).then((c) =>
-    c.match(req).then((hit) => {
-      // plain fetch: let the Vercel edge cache answer. Forcing no-store here
-      // sent every visit straight through to the database — which is what blew
-      // the read quota. Content changes ship via redeploy, which purges the edge.
-      const net = fetch(req).then((res) => {
-        if (res.ok) c.put(req, res.clone());
-        return res;
-      }).catch(() => hit);
-      return hit || net;
     })
   );
 }
@@ -71,30 +59,17 @@ self.addEventListener("fetch", (e) => {
   if (req.method !== "GET") return;
   const url = new URL(req.url);
 
-  // Audio: cache same-origin clips (local dev). Cross-origin clips (deployed,
-  // served from a CDN) are left to the browser's native media loader — routing
-  // opaque/range media requests through the SW stalls playback in Chrome.
-  if (url.pathname.includes("/audio/")) {
-    if (url.origin === self.location.origin && !req.headers.has("range")) {
-      e.respondWith(cacheFirst(req));
-    }
-    return;
-  }
+  // Cross-origin (jsDelivr audio + images): leave to the browser's native
+  // loader — routing opaque/range media through the SW stalls playback.
   if (url.origin !== self.location.origin) return;
 
   if (req.mode === "navigate") {
     e.respondWith(fetch(req).catch(() => caches.match("/index.html")));
     return;
   }
-  if (url.pathname.startsWith("/img/") ||
-      url.pathname.startsWith("/api/word/")) {
-    e.respondWith(cacheFirst(req));
-    return;
-  }
-  if (url.pathname.startsWith("/api/")) {
-    e.respondWith(staleWhileRevalidate(req));
-    return;
-  }
+  // same-origin /audio/ and /img/ only exist in local dev; range requests bypass
+  if (url.pathname.startsWith("/audio/") && req.headers.has("range")) return;
+
   e.respondWith(cacheFirst(req));
 });
 

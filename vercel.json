@@ -3,9 +3,6 @@
   "buildCommand": null,
   "outputDirectory": "public",
   "framework": null,
-  "functions": {
-    "api/**/*.js": { "maxDuration": 30 }
-  },
   "headers": [
     {
       "source": "/sw.js",
@@ -24,6 +21,12 @@
       "source": "/(icon-.*\\.png|apple-touch-icon\\.png|favicon\\.png)",
       "headers": [
         { "key": "Cache-Control", "value": "public, max-age=604800" }
+      ]
+    },
+    {
+      "source": "/data/(.*)",
+      "headers": [
+        { "key": "Cache-Control", "value": "public, max-age=300, s-maxage=31536000, stale-while-revalidate=86400" }
       ]
     }
   ]
