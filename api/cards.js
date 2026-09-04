@@ -14,5 +14,5 @@ export default async function handler(req, res) {
     LEFT JOIN example_sentences s ON s.word_id = w.id AND s.sort_order = 0
     ORDER BY w.frequency_rank
   `);
-  send(res, rows, { maxAge: 300 });
+  send(res, rows, { maxAge: 3600 });
 }

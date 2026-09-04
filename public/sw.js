@@ -15,9 +15,16 @@ self.addEventListener("install", (e) => {
   e.waitUntil(
     caches.open(CACHE).then((c) =>
       c.addAll(SHELL).then(() =>
-        Promise.all(DATA.map((u) =>
-          fetch(u, { cache: "reload" })   // bypass the HTTP cache — get fresh
-            .then((r) => r.ok && c.put(u, r)).catch(() => {})))
+        Promise.all(DATA.map(async (u) => {
+          try {
+            const r = await fetch(u);           // hits the edge cache, not Turso
+            if (r.ok) return c.put(u, r);
+          } catch (_) { /* offline / API down */ }
+          // carry the last-known-good copy forward from a previous cache so a
+          // version bump never leaves the app with no data to run on
+          const old = await caches.match(u);
+          if (old) return c.put(u, old);
+        }))
       )
     ).then(() => self.skipWaiting())
   );
@@ -47,7 +54,10 @@ function cacheFirst(req) {
 function staleWhileRevalidate(req) {
   return caches.open(CACHE).then((c) =>
     c.match(req).then((hit) => {
-      const net = fetch(req, { cache: "no-store" }).then((res) => {
+      // plain fetch: let the Vercel edge cache answer. Forcing no-store here
+      // sent every visit straight through to the database — which is what blew
+      // the read quota. Content changes ship via redeploy, which purges the edge.
+      const net = fetch(req).then((res) => {
         if (res.ok) c.put(req, res.clone());
         return res;
       }).catch(() => hit);

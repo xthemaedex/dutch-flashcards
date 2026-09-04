@@ -5,7 +5,7 @@ import {
 export default async function handler(req, res) {
   const id = Number(req.query.id);
   const [w] = await all("SELECT * FROM words WHERE id = ?", [id]);
-  if (!w) return send(res, { error: "not found" }, { status: 404, maxAge: 0 });
+  if (!w) return send(res, { error: "not found" }, { status: 404, maxAge: 0, sMaxAge: 0 });
 
   const out = { ...w };
   out.image = (IMAGE_ENABLED && w.image_path) ? {

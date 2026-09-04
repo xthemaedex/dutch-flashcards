@@ -37,12 +37,20 @@ export function imageUrl(filePath) {
 
 // JSON response. Gzips large payloads in-function so /api/details (~8 MB raw)
 // stays well under Vercel's 4.5 MB response-body limit.
-// maxAge 0 => no edge cache (the service worker is the cache for those); the
-// browser/SW still revalidate, and content changes show up immediately.
-export function send(res, body, { status = 200, maxAge = 300 } = {}) {
+//
+// The dataset is static between deploys, so lean HARD on the Vercel edge cache:
+// `sMaxAge` (defaults to a day) keeps Turso from being hit more than ~once per
+// region per day no matter how often clients revalidate. A content change ships
+// via a redeploy, which purges the edge — so staleness is never an issue.
+// `maxAge` is the browser's own cache window (kept shorter).
+export function send(res, body, { status = 200, maxAge = 300, sMaxAge = 86400 } = {}) {
   res.setHeader("Content-Type", "application/json; charset=utf-8");
-  res.setHeader("Cache-Control",
-    maxAge > 0 ? `public, max-age=${maxAge}, s-maxage=${maxAge}` : "public, max-age=0, must-revalidate");
+  res.setHeader(
+    "Cache-Control",
+    sMaxAge > 0
+      ? `public, max-age=${maxAge}, s-maxage=${sMaxAge}, stale-while-revalidate=604800`
+      : "public, max-age=0, must-revalidate",
+  );
   const json = Buffer.from(JSON.stringify(body));
   if (json.length > 128 * 1024) {
     res.setHeader("Content-Encoding", "gzip");

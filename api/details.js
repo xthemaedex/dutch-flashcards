@@ -63,5 +63,5 @@ export default async function handler(req, res) {
     }
   }
 
-  send(res, out, { maxAge: 120 });
+  send(res, out, { maxAge: 3600 });   // 24h at the edge (send() default); browser revalidates hourly
 }
