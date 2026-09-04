@@ -1,0 +1,43 @@
+# image_stoplist.txt — Dutch lemmas that should NEVER get an auto-fetched image.
+# One lemma per line; '#' starts a comment. Used by scripts/fetch_images.py.
+#
+# Keyword photo search produces noise for abstract nouns, time words, grammatical
+# nouns and the like. Add lemmas here as you spot bad matches while reviewing.
+# (The seed batch is left un-stoplisted on purpose so you can judge dag/jaar etc.)
+
+# --- time words: a keyword photo never really says "a day" / "a year" ---
+dag           # day
+jaar          # year
+week
+maand         # month
+uur           # hour
+tijd          # time
+keer          # time(s), occasion
+
+# --- abstract nouns ---
+ding          # thing
+manier        # way, manner
+reden         # reason
+kans          # chance
+gevoel        # feeling
+mening        # opinion
+idee          # idea
+probleem      # problem
+verschil      # difference
+mogelijkheid  # possibility
+
+# --- mislabelled particles / adjective forms / bad glosses ---
+heen          # adverb ('to there'); corpus gloss is nonsense
+britse        # adjective (British)
+mars          # march / Mars — ambiguous
+rock          # English loan dup
+house         # English loan dup
+doctor        # English loan dup (see dokter)
+
+# --- vulgar / slang (keyword search goes bad places) ---
+klootzak
+pik
+stront
+gozer
+lul
+kut

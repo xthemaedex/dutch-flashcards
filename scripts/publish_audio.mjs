@@ -1,11 +1,13 @@
-/* publish_audio.mjs — push locally-generated audio to the `audio` branch, which
- * is served by the jsDelivr CDN (https://cdn.jsdelivr.net/gh/<user>/<repo>@audio/).
+/* publish_audio.mjs — push locally-generated media (audio + per-word images) to
+ * the `audio` branch, which is served by the jsDelivr CDN
+ * (https://cdn.jsdelivr.net/gh/<user>/<repo>@audio/).
  *
  *   node scripts/publish_audio.mjs
  *
- * Commits everything under audio/ to the orphan `audio` branch (kept separate so
- * the main branch stays lean), pushes it, and pings jsDelivr to refresh its
- * cache. Idempotent — re-run whenever generate_audio.py has produced more clips.
+ * Commits everything under audio/ and images/ to the orphan `audio` branch (kept
+ * separate so the main branch stays lean), pushes it, and pings jsDelivr to
+ * refresh its cache. Idempotent — re-run whenever generate_audio.py /
+ * fetch_images.py have produced more files.
  */
 import { execFileSync } from "node:child_process";
 import { readdirSync } from "node:fs";
@@ -31,12 +33,13 @@ if (sh("git", ["status", "--porcelain"])) {
   process.exit(1);
 }
 
-function count(scope) {
-  try { return readdirSync(join(ROOT, "audio", scope)).filter((f) => f.endsWith(".mp3")).length; }
+function count(dir, ext) {
+  try { return readdirSync(join(ROOT, dir)).filter((f) => f.endsWith(ext)).length; }
   catch { return 0; }
 }
-const totals = ["word", "sentence", "conjugation"].map((s) => `${s} ${count(s)}`).join(", ");
-console.log("local clips:", totals);
+const totals = ["word", "sentence", "conjugation"]
+  .map((s) => `${s} ${count(join("audio", s), ".mp3")}`).join(", ");
+console.log("local clips:", totals, "| images:", count("images", ".jpg"));
 
 // worktree so we never disturb the checkout on main
 const wt = join(ROOT, ".git", "audio-worktree");
@@ -44,14 +47,17 @@ try { sh("git", ["worktree", "remove", "--force", wt]); } catch {}
 sh("git", ["fetch", "-q", "origin", "audio"]);
 sh("git", ["worktree", "add", "-q", wt, "audio"]);
 try {
-  // mirror local audio/ into the worktree
-  execFileSync("rsync", ["-a", "--delete", join(ROOT, "audio") + "/", join(wt, "audio") + "/"],
-    { stdio: "inherit" });
-  execFileSync("git", ["-C", wt, "add", "-A", "audio"], { stdio: "inherit" });
+  // mirror local audio/ and images/ into the worktree
+  for (const dir of ["audio", "images"]) {
+    execFileSync("rsync", ["-a", "--delete",
+      "--exclude", "README.md",
+      join(ROOT, dir) + "/", join(wt, dir) + "/"], { stdio: "inherit" });
+    execFileSync("git", ["-C", wt, "add", "-A", dir], { stdio: "inherit" });
+  }
   const changed = execFileSync("git", ["-C", wt, "status", "--porcelain"], { encoding: "utf8" }).trim();
-  if (!changed) { console.log("no new clips to publish."); }
+  if (!changed) { console.log("no new media to publish."); }
   else {
-    execFileSync("git", ["-C", wt, "commit", "-q", "-m", "audio: sync clips"], { stdio: "inherit" });
+    execFileSync("git", ["-C", wt, "commit", "-q", "-m", "media: sync audio + images"], { stdio: "inherit" });
     execFileSync("git", ["-C", wt, "push", "-q", "origin", "audio"], { stdio: "inherit" });
     console.log("pushed to origin/audio");
   }
