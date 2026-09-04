@@ -119,15 +119,24 @@ function wireAudio(root) {
   });
 }
 
-/* optional per-word image: drop images/<lemma>.jpg and it appears; absent -> nothing.
- * We only emit an <img> for lemmas the server says it has, so no 404 noise. */
-let IMAGES = new Set();
-fetch("/api/images").then((r) => r.json()).then((a) => { IMAGES = new Set(a); }).catch(() => {});
-function wordImage(lemma) {
-  const s = String(lemma).toLowerCase();
-  return IMAGES.has(s)
-    ? `<img class="wordimg" alt="" loading="lazy" src="/img/${encodeURIComponent(s)}" onerror="this.remove()">`
+/* per-word image (Phase 4): concrete nouns get a cached photo; abstract words,
+ * particles and most verbs/adjectives have none and fall back to a text-only
+ * card. The image + its CC attribution ride along in the /api/details payload
+ * (d.image = { url, attribution, license, source_url } | null). A broken image
+ * tears its own figure out and drops the layout back to text-only. */
+function wordImage(d) {
+  const im = d && d.image;
+  if (!im || !im.url) return "";
+  const credit = im.attribution
+    ? `<figcaption class="cardimg-credit" title="${esc(im.attribution)}">${
+        esc(im.license || "CC")} · via Openverse</figcaption>`
     : "";
+  return `<figure class="cardimg-wrap">
+      <img class="cardimg" alt="" loading="lazy" src="${esc(im.url)}"
+        onerror="this.closest('.rcard')?.classList.remove('has-image');
+                 this.closest('.cardimg-wrap').remove()">
+      ${credit}
+    </figure>`;
 }
 
 /* ---------- PWA: service worker, install prompt, daily reminder ---------- */
@@ -419,18 +428,19 @@ async function renderCard() {
     ? esc(card.sentence_blanked).replace("___", "<b>______</b>")
     : (card.sentence_nl ? esc(card.sentence_nl) : `<span class="en">no example sentence</span>`);
 
-  const d = await detail(card.id);            // audio + full detail (from the bulk map)
+  const d = await detail(card.id);            // audio + image + full detail (bulk map)
   const wAudio = d && d.audio ? d.audio.word : null;
+  const img = !SESSION.flipped ? wordImage(d) : "";
   let body;
   if (!SESSION.flipped) {
+    // image + word carry equal visual weight; de/het tag + 🔊 stay small
     body = `
-      ${tag}
-      <div class="word">${esc(card.lemma)}</div>
-      <div class="row" style="margin:2px 0 4px">
-        ${audioBtn(wAudio)}
-        <span class="en">${wAudio ? "hear the word" : "audio pending"}</span>
+      ${img}
+      <div class="cardmeta">
+        ${tag}
+        ${audioBtn(wAudio, "sm")}
       </div>
-      ${wordImage(card.lemma)}
+      <div class="word">${esc(card.lemma)}</div>
       <div class="cloze">${cloze}</div>
       <div class="hint">tap card, or swipe → knew&nbsp;it / ← didn't</div>`;
   } else {
@@ -444,7 +454,7 @@ async function renderCard() {
       <span>ease ${SRS.get(card.id).ef.toFixed(2)} · seen ${SRS.get(card.id).seen}×</span>
     </div>
     <div class="swipe-area">
-      <div class="rcard" id="rcard">
+      <div class="rcard${img ? " has-image" : ""}" id="rcard">
         <div class="swipe-flag know">KNEW IT</div>
         <div class="swipe-flag dont">AGAIN</div>
         ${body}
@@ -692,16 +702,18 @@ async function renderBrowseCard() {
   };
   const tag = w.article ? `<span class="tag ${w.article}">${w.article}</span>`
     : `<span class="tag pos">${esc(w.part_of_speech)}</span>`;
+  const img = BR.flipped ? "" : wordImage(d);
   view.innerHTML = `
     <div class="crumbs"><button id="bBack">Sets</button><span>›</span>
       <span>${BR.idx + 1} / ${BR.words.length}</span></div>
-    <div class="rcard">
+    <div class="rcard${img ? " has-image" : ""}">
       ${BR.flipped ? tag + cardBack(compat, d)
-        : `${tag}<div class="word">${esc(w.lemma)}</div>
-           <div class="row" style="margin:2px 0 4px">
-             ${audioBtn(d && d.audio ? d.audio.word : null)}
-             <span class="en">${d && d.audio && d.audio.word ? "hear the word" : "audio pending"}</span></div>
-           ${wordImage(w.lemma)}
+        : `${img}
+           <div class="cardmeta">
+             ${tag}
+             ${audioBtn(d && d.audio ? d.audio.word : null, "sm")}
+           </div>
+           <div class="word">${esc(w.lemma)}</div>
            <div class="cloze">${w.sentence_blanked
               ? esc(w.sentence_blanked).replace("___", "<b>______</b>")
               : esc(w.sentence_nl || "")}</div>

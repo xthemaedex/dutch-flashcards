@@ -195,9 +195,36 @@ td:first-child,th:first-child{position:sticky;left:0;background:var(--surface);f
 .cardtools .linkbtn{color:var(--muted)}
 .cardtools .linkbtn:first-child{color:var(--macaw)}
 
-/* per-word image (optional; drop files in images/) */
-.wordimg{display:block;max-height:170px;width:auto;border-radius:12px;margin:10px 0 2px;
-  object-fit:cover;background:var(--surface)}
+/* ---------------- per-word image (Phase 4) ----------------
+ * On an image card the photo and the word are co-equal focal points: the photo
+ * bleeds to the card edges and fills ~58% of the height, the word sits directly
+ * under it in the same large bold type as a text-only card. de/het + 🔊 shrink
+ * to a small secondary row between them. No image -> none of this applies and
+ * the card renders exactly as before. */
+.rcard.has-image{overflow:hidden;padding-bottom:18px}
+.cardimg-wrap{margin:-26px -22px 0;background:var(--surface)}
+.cardimg{display:block;width:100%;height:auto;aspect-ratio:5 / 4;object-fit:cover}
+.cardimg-credit{font-size:10px;color:var(--muted);padding:5px 22px 0;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+
+.cardmeta{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+/* image supplies the bulk, so drop the tall text-card min-height and the
+   push-to-bottom on the cloze; keep image + word tight and co-equal */
+.rcard.has-image{min-height:0}
+.rcard.has-image .cardmeta{margin-top:14px}
+.rcard.has-image .word{margin-top:8px;line-height:1.1}
+.rcard.has-image .cloze{margin-top:12px;padding-top:0}
+.rcard.has-image .hint{margin-top:10px}
+
+/* small, secondary audio button (image cards + card fronts) */
+.audio-btn.sm{width:36px;height:36px;font-size:15px;border-radius:10px}
+.audio-btn.sm.muted{width:auto;height:36px;padding:0 10px}
+
+/* desktop / wider screens: scale the whole card up, keep the balance */
+@media (min-width:560px){
+  .rcard.has-image .cardimg{aspect-ratio:3 / 2}
+  .rcard.has-image .word{font-size:42px}
+}
 
 /* ---- Stats screen ---- */
 .streakrow{display:flex;align-items:center;gap:14px;background:var(--card);
