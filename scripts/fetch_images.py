@@ -85,30 +85,32 @@ def get_token():
     return tok
 
 
-def api_get(url, token=None, tries=4):
+class QuotaExhausted(Exception):
+    """Openverse is throttling us hard — stop the run, try again tomorrow."""
+
+
+def api_get(url, token=None, tries=3):
     headers = {"User-Agent": UA}
     if token:
         headers["Authorization"] = "Bearer " + token
     for attempt in range(tries):
         try:
             req = urllib.request.Request(url, headers=headers)
-            with urllib.request.urlopen(req, timeout=25) as r:
+            with urllib.request.urlopen(req, timeout=12) as r:
                 return json.load(r)
         except urllib.error.HTTPError as e:
             if e.code == 429:
-                wait = 15 * (attempt + 1)
-                log("  rate-limited; sleeping %ds" % wait)
-                time.sleep(wait)
-                continue
+                raise QuotaExhausted("HTTP 429 from Openverse")
             if e.code >= 500 and attempt < tries - 1:
-                time.sleep(5)
+                time.sleep(4)
                 continue
             raise
         except (urllib.error.URLError, TimeoutError):
             if attempt < tries - 1:
-                time.sleep(5)
+                time.sleep(3)
                 continue
-            raise
+            # persistent timeouts almost always mean the daily quota is spent
+            raise QuotaExhausted("repeated timeouts")
     return None
 
 
@@ -370,6 +372,11 @@ def main():
         reqs += 1
         try:
             results = search(q, token, licenses)
+        except QuotaExhausted as e:
+            reqs -= 1
+            log("\nOpenverse quota looks exhausted (%s) — stopping. "
+                "Re-run tomorrow to continue where this left off." % e)
+            break
         except Exception as e:  # noqa: BLE001
             log("  %-16s search error: %s" % (lemma, e))
             skipped += 1
@@ -419,7 +426,7 @@ def main():
         got += 1
         log("  %-16s (q=%r) -> images/%s.jpg  %sx%s  [%s]" % (
             lemma, q, lemma, size[0], size[1], licence_label(best)))
-        if got % 20 == 0:
+        if got % 8 == 0:
             flush()   # checkpoint so a crash mid-run keeps progress
         time.sleep(PER_REQUEST_SLEEP)
 
