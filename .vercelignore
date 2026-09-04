@@ -1,13 +1,14 @@
-# The deploy is just the static site. Everything the app serves is in public/
-# (shell + public/data/*.json + icons). No build step, no functions.
-data
-db
-audio
-images
-scripts
-node_modules
-.git
-.env
-.env.*
-*.md
-!README.md
+# The deploy is just the static site — the whole public/ folder (shell +
+# public/data/*.json + icons). No build step, no functions.
+# Patterns are anchored (leading /) so they don't also match public/data etc.
+/data
+/db
+/audio
+/images
+/scripts
+/node_modules
+/.git
+/.env
+/.env.*
+/*.md
+!/README.md
