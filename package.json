@@ -5,7 +5,6 @@
   "type": "module",
   "description": "Offline-first Dutch vocabulary flashcard PWA (fully static — no database)",
   "scripts": {
-    "build": "python3 scripts/seed_db.py --json data/corpus_words.json --reset && python3 scripts/build_static.py --deploy",
     "dev": "python3 scripts/build_static.py && python3 scripts/serve.py"
   }
 }
