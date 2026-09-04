@@ -9,34 +9,37 @@ difficulty heatmap, "mark as known", optional per-word images, dark mode.
 reminder, native-feeling tab bar. All progress lives in the browser
 (`localStorage` / IndexedDB), never the server.
 
+**Runtime: fully static.** The data is frozen into JSON at build time and served
+from a CDN — no database, no serverless functions, nothing to run out of quota.
+
 ```
 dutch-flashcard-app/
 ├── data/
 │   ├── seed_words.json        # hand-authored 20-word verification batch (Claude, no API)
 │   ├── corpus_words.json      # auto-built corpus (frequency + Wiktionary + Tatoeba)
-│   ├── corpus_report.md       # build report: rows needing manual review
-│   ├── test_batch_review.md   # human-readable dump of the 20-word batch
+│   ├── image_candidates.txt   # curated concrete nouns worth an image (pick_image_words.py)
+│   ├── audio_manifest.json    # which audio clips exist on the CDN branch
 │   └── sources/               # downloaded open datasets (see scripts/fetch_sources.sh)
 ├── db/
-│   ├── schema.sql             # SQLite schema
-│   └── flashcards.db          # built artifact
+│   ├── schema.sql             # SQLite schema  (BUILD-TIME ONLY)
+│   └── flashcards.db          # build artifact — build_static.py reads it, then nothing does
 ├── scripts/
 │   ├── fetch_sources.sh       # one-time: download the open datasets (~280 MB)
 │   ├── conjugator.py          # rule-based Dutch verb conjugation engine
 │   ├── build_corpus.py        # datasets -> corpus_words.json (+ report)
-│   ├── seed_db.py             # *_words.json -> SQLite, queues pending audio rows
-│   ├── generate_audio.py      # pending audio rows -> cached files (free/local TTS)
-│   └── serve.py               # local server: JSON API + static viewer/ + audio
-├── viewer/                    # the app (Phases 2–5)
-│   ├── index.html             #   shell, tab bar, manifest + apple meta
-│   ├── app.css                #   Duolingo palette, light/dark, terracotta heatmap
-│   ├── app.js                 #   review · audio · browse · search · stats · PWA
-│   ├── srs.js                 #   SM-2 + queue + streak + stats (localStorage)
-│   ├── sw.js                  #   service worker: offline cache + daily reminder
-│   ├── manifest.webmanifest   #   installable PWA metadata
-│   └── icon-*.png             #   app icons (generated)
-├── images/                    # per-word CC photos, fetched by fetch_images.py
-└── audio/{word,sentence}/     # cached .mp3, referenced by relative path in the DB
+│   ├── seed_db.py             # *_words.json -> SQLite build DB
+│   ├── build_static.py        # build DB -> public/data/*.json  (the deploy artifact)
+│   ├── pick_image_words.py    # corpus -> data/image_candidates.txt (concreteness-filtered)
+│   ├── fetch_images.py        # candidates -> images/<lemma>.jpg via Openverse
+│   ├── generate_audio.py      # queued audio -> cached .mp3 (free/local TTS)
+│   ├── publish_audio.mjs      # push audio/ + images/ to the jsDelivr `audio` branch
+│   ├── refresh_media.sh       # publish media + rebuild static + (commit/push)
+│   └── serve.py               # local static file server
+├── public/                    # the app — this whole folder is what deploys
+│   ├── index.html · app.css · app.js · srs.js · sw.js · manifest.webmanifest · icon-*.png
+│   └── data/                  #   cards.json · details.json · sets.json · stats.json (built)
+├── images/                    # per-word CC photos, fetched by fetch_images.py (gitignored)
+└── audio/{word,sentence}/     # cached .mp3 (gitignored; live on the `audio` branch)
 ```
 
 ## Phase 2 — review app
@@ -100,11 +103,9 @@ python3 scripts/serve.py        # then open http://localhost:8000
     image for them; `data/image_misses.txt` (auto) skips dead ends on re-runs.
     A daily scheduled task grows coverage; QA is a contact-sheet pass adding
     duds to the stoplist.
-  - Served locally by `serve.py` at `/img/<lemma>`; in production from the same
-    jsDelivr media branch as audio (`IMAGE_BASE_URL`). The image URL + credit
-    ride along in `/api/details`. To push to the live DB use
-    `scripts/push_images_to_turso.mjs` (ALTER + UPDATE only — **not**
-    `migrate_to_turso.mjs --only words`, which would cascade-delete audio).
+  - The image URL + CC credit are baked into `details.json` by `build_static.py`
+    (`--deploy` → jsDelivr URL; local → `/img/<lemma>` so you can preview freshly
+    fetched images). Publish with `scripts/refresh_media.sh`.
 
 ### Phase 5 — PWA (install · offline · reminder)
 
@@ -148,21 +149,26 @@ bash scripts/fetch_sources.sh
 # 2. build the corpus (default 2000 words; raise for B2 breadth)
 python3 scripts/build_corpus.py --limit 2000
 
-# 3. load it into SQLite
+# 3. load it into the build DB
 python3 scripts/seed_db.py --reset --json data/corpus_words.json
 
-# 4. audio (pick one; both free, no key). Report first:
+# 4. freeze the data into static JSON the app serves directly
+python3 scripts/build_static.py
+
+# 5. audio (pick one; both free, no key). Report first:
 python3 scripts/generate_audio.py --report
 python3 scripts/generate_audio.py --provider edge --voice nl-NL-MaartenNeural
 ```
 
 Re-run `build_corpus.py --limit N` any time to grow the set; `seed_db.py` is
-idempotent (`--reset` rebuilds from scratch).
+idempotent (`--reset` rebuilds from scratch). `db/flashcards.db` is now only a
+*build* artifact — `build_static.py` reads it once and the finished app never
+touches a database.
 
-### 5. Run the app
+### 6. Run the app
 
 ```bash
-python3 scripts/serve.py          # then open http://localhost:8000
+npm run dev                       # build_static.py + serve.py; open http://localhost:8000
 ```
 
 Opens the Phase 2 review app (see **Phase 2** above). Streaks, the difficulty
@@ -218,10 +224,13 @@ python3 scripts/conjugator.py werken hebben zijn opbellen gaan studeren
 
 ## Schema — [db/schema.sql](db/schema.sql)
 
-`word_sets` · `words` (noun cols + verb cols, NULL when N/A) · `word_set_members`
-(M:N) · `example_sentences` (incl. `sentence_blanked`) · `verb_conjugations`
-(`tense` + `person` CHECK-constrained, sort keys) · `audio_assets` (`status`,
-relative `file_path`, `char_count`) · `v_word_card` view.
+Only a *build-time* SQLite database (`seed_db.py` → `build_static.py` reads it →
+static JSON). Nothing queries it at runtime.
+
+`word_sets` · `words` (noun cols + verb cols + `image_*`, NULL when N/A) ·
+`word_set_members` (M:N) · `example_sentences` (incl. `sentence_blanked`) ·
+`verb_conjugations` (`tense` + `person` CHECK-constrained, sort keys) ·
+`audio_assets` (`status`, relative `file_path`, `char_count`) · `v_word_card` view.
 
 `tense ∈ {presens, imperfectum, perfectum, plusquamperfectum, futurum, futurum_exactum, conditionalis}`
 `person ∈ {ik, jij, hij, wij, jullie, zij_mv}`
@@ -312,57 +321,47 @@ The word list will keep growing, so use a free **unmetered** engine —
 
 ---
 
-## Deployment (phase 5.5)
+## Deployment
 
-**Live:** https://dutch-flashcard-app.vercel.app  ·  repo auto-deploys on push to `main`.
+**Live:** https://dutch-flashcard-app.vercel.app  ·  auto-deploys on push to `main`.
 
-Live stack: **GitHub → Turso (libSQL) → Vercel**. Local dev is unchanged
-(`python3 scripts/serve.py`).
+**Fully static — no database, no serverless functions.** The dataset never
+changes at runtime, so `build_static.py` freezes it into JSON files and Vercel's
+CDN serves them.
 
-- **DB:** `scripts/migrate_to_turso.mjs` copies `db/flashcards.db` into Turso.
-  `TURSO_DATABASE_URL` + `TURSO_AUTH_TOKEN` come from the Turso dashboard
-  (see `.env.example`; `.env` is gitignored).
+- **What deploys:** just `public/` — the shell + `public/data/{cards,details,sets,stats}.json`
+  (committed) + icons. `vercel.json` has no build step and no functions.
+- **Regenerating the data** (after `build_corpus.py`, `generate_audio.py` or
+  `fetch_images.py`):
 
     ```bash
-    npm install
-    node --env-file=.env scripts/migrate_to_turso.mjs --reset
+    python3 scripts/seed_db.py --json data/corpus_words.json --reset
+    python3 scripts/build_static.py --deploy      # bakes jsDelivr URLs + bumps the SW
+    git add public/data data/audio_manifest.json && git commit && git push
     ```
 
-- **API:** `api/*.js` — Vercel serverless functions (Node, `@libsql/client`)
-  replacing `serve.py`'s endpoints. Large payloads (`/api/details`) are gzipped
-  in-function to stay under Vercel's 4.5 MB response limit.
-- **Static:** `public/` (was `viewer/`) — served at the site root by Vercel.
-- **Audio & images:** functions emit `null` unless `AUDIO_BASE_URL` /
-  `IMAGE_BASE_URL` are set (both → the jsDelivr media branch); the app then
-  shows 🔇 / a text-only card.
-- **Env vars on Vercel:** `TURSO_DATABASE_URL`, `TURSO_AUTH_TOKEN`
-  (read-only token), optionally `AUDIO_BASE_URL` and `IMAGE_BASE_URL`.
-
-### Media hosting (jsDelivr)
-
-Generated audio clips **and** per-word images live on the orphan **`audio`**
-branch and are served free by **jsDelivr**
-(`https://cdn.jsdelivr.net/gh/<user>/dutch-flashcards@audio/{audio,images}/...`),
-referenced by the API via `AUDIO_BASE_URL` / `IMAGE_BASE_URL`. No op limits,
-global CDN.
+- **Audio + images** live on the orphan **`audio`** branch, served by **jsDelivr**
+  (`cdn.jsdelivr.net/gh/<user>/dutch-flashcards@audio/{audio,images}/...`). Their
+  absolute URLs are baked into `details.json` at build time. `data/audio_manifest.json`
+  records which clips exist (so the build knows which to link).
 
 ```bash
-# --- audio ---
-# generate more clips (background; edge-tts is slow/flaky, re-run as needed)
+# generate more audio (background; edge-tts is slow/flaky, re-run as needed)
 python3 scripts/generate_audio.py --provider edge --voice nl-NL-MaartenNeural --redo-errors
 #   ...or faster, no rate limits:  --provider piper --piper-model voices/<nl>.onnx
-# push clips to the CDN + refresh the audio_assets table (idempotent):
-bash scripts/refresh_audio.sh        # publish_audio.mjs + migrate --only audio_assets
 
-# --- images (one-time rollout) ---
+# fetch per-word images (throttled ~150/day; a scheduled task loops this)
 python3 scripts/pick_image_words.py                       # -> data/image_candidates.txt
 python3 scripts/fetch_images.py --json data/corpus_words.json \
         --only-list data/image_candidates.txt --strict-title --requests 150
-#   ^ throttled; repeat daily until "Scope complete" (a scheduled task does this)
-node scripts/publish_audio.mjs                            # pushes images/ to the branch too
-node --env-file=.env scripts/push_images_to_turso.mjs     # ALTER + UPDATE words on Turso
-#   then: set IMAGE_BASE_URL on Vercel + redeploy (SW is already at v13)
+
+# publish everything: push media to the branch, rebuild static, then commit + push
+bash scripts/refresh_media.sh
 ```
+
+**History:** earlier revisions used Turso (libSQL) behind Vercel functions; the
+free-tier read quota couldn't take `/api/details` scanning the whole dataset on
+every visit, so it moved to static. `.env.example` still lists the old vars.
 
 New files appear on the live site within ~12 h (jsDelivr branch cache), sooner
 after the automatic purge. The service worker caches each played clip / shown image.
