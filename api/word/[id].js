@@ -1,4 +1,6 @@
-import { all, send, audioUrl, TENSE_ORDER, PERSON_ORDER } from "../_lib.js";
+import {
+  all, send, audioUrl, imageUrl, IMAGE_ENABLED, TENSE_ORDER, PERSON_ORDER,
+} from "../_lib.js";
 
 export default async function handler(req, res) {
   const id = Number(req.query.id);
@@ -6,6 +8,12 @@ export default async function handler(req, res) {
   if (!w) return send(res, { error: "not found" }, { status: 404, maxAge: 0 });
 
   const out = { ...w };
+  out.image = (IMAGE_ENABLED && w.image_path) ? {
+    url: imageUrl(w.image_path),
+    attribution: w.image_attribution,
+    license: w.image_license,
+    source_url: w.image_source_url,
+  } : null;
   out.sentences = await all(
     "SELECT * FROM example_sentences WHERE word_id = ? ORDER BY sort_order", [id]);
 

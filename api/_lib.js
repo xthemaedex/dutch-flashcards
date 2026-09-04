@@ -24,6 +24,17 @@ export function audioUrl(filePath) {
   return AUDIO_BASE.replace(/\/$/, "") + "/" + filePath;
 }
 
+// Per-word images (Phase 4). Same deal as audio: one-time-fetched files served
+// from the jsDelivr media branch (images/<lemma>.jpg on the `audio` branch).
+// Set IMAGE_BASE_URL once the images are pushed; until then image is null and
+// the card is text-only.
+const IMAGE_BASE = process.env.IMAGE_BASE_URL || "";
+export const IMAGE_ENABLED = !!IMAGE_BASE;
+export function imageUrl(filePath) {
+  if (!filePath || !IMAGE_BASE) return null;
+  return IMAGE_BASE.replace(/\/$/, "") + "/" + filePath;
+}
+
 // JSON response. Gzips large payloads in-function so /api/details (~8 MB raw)
 // stays well under Vercel's 4.5 MB response-body limit.
 // maxAge 0 => no edge cache (the service worker is the cache for those); the

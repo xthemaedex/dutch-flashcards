@@ -1,4 +1,7 @@
-import { all, send, audioUrl, AUDIO_ENABLED, TENSE_ORDER, PERSON_ORDER } from "./_lib.js";
+import {
+  all, send, audioUrl, imageUrl, AUDIO_ENABLED, IMAGE_ENABLED,
+  TENSE_ORDER, PERSON_ORDER,
+} from "./_lib.js";
 
 // Every card's back-of-card detail in one payload — the service worker precaches
 // this so the whole review flow works offline, not just card fronts.
@@ -8,7 +11,8 @@ export default async function handler(req, res) {
   for (const w of await all(`
       SELECT id, translation_en, definition_nl, definition_en, article, gender,
              plural, auxiliary, past_participle, is_separable, is_irregular,
-             part_of_speech
+             part_of_speech, image_path, image_attribution, image_license,
+             image_source_url
       FROM words`)) {
     out[w.id] = {
       translation_en: w.translation_en,
@@ -18,6 +22,12 @@ export default async function handler(req, res) {
       auxiliary: w.auxiliary, past_participle: w.past_participle,
       is_separable: w.is_separable, is_irregular: w.is_irregular,
       part_of_speech: w.part_of_speech,
+      image: (IMAGE_ENABLED && w.image_path) ? {
+        url: imageUrl(w.image_path),
+        attribution: w.image_attribution,
+        license: w.image_license,
+        source_url: w.image_source_url,
+      } : null,
       sentences: [], audio: {},
     };
   }

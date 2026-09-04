@@ -131,13 +131,15 @@ def build(conn, data, queue_conjugation_audio):
 
     for w in data["words"]:
         # --- word -------------------------------------------------------
+        img = w.get("image") or {}
         cur.execute(
             """INSERT INTO words
                  (lemma, part_of_speech, translation_en, definition_nl, definition_en,
                   article, gender, plural,
                   infinitive, past_participle, auxiliary, is_separable, is_irregular,
-                  cefr_level, frequency_rank, notes)
-               VALUES (?,?,?,?,?, ?,?,?, ?,?,?,?,?, ?,?,?)
+                  cefr_level, frequency_rank, notes,
+                  image_path, image_source, image_attribution, image_source_url, image_license)
+               VALUES (?,?,?,?,?, ?,?,?, ?,?,?,?,?, ?,?,?, ?,?,?,?,?)
                ON CONFLICT(lemma, part_of_speech) DO UPDATE SET
                    translation_en=excluded.translation_en,
                    definition_nl=excluded.definition_nl,
@@ -152,7 +154,12 @@ def build(conn, data, queue_conjugation_audio):
                    is_irregular=excluded.is_irregular,
                    cefr_level=excluded.cefr_level,
                    frequency_rank=excluded.frequency_rank,
-                   notes=excluded.notes""",
+                   notes=excluded.notes,
+                   image_path=excluded.image_path,
+                   image_source=excluded.image_source,
+                   image_attribution=excluded.image_attribution,
+                   image_source_url=excluded.image_source_url,
+                   image_license=excluded.image_license""",
             (
                 w["lemma"], w["part_of_speech"], w["translation_en"],
                 w.get("definition_nl"), w.get("definition_en"),
@@ -161,6 +168,8 @@ def build(conn, data, queue_conjugation_audio):
                 1 if w.get("is_separable") else 0,
                 1 if w.get("is_irregular") else 0,
                 w.get("cefr_level"), w.get("frequency_rank"), w.get("notes"),
+                img.get("path"), img.get("source"), img.get("attribution"),
+                img.get("source_url"), img.get("license"),
             ),
         )
         word_id = cur.execute(

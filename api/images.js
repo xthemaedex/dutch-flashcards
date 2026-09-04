@@ -1,7 +1,11 @@
-import { send } from "./_lib.js";
+import { all, send, IMAGE_ENABLED } from "./_lib.js";
 
-// No per-word images in the deployed build (see images/README.md). The client
-// only renders <img> for lemmas returned here, so an empty list = no image tags.
+// Lemmas that have an image (once IMAGE_BASE_URL is set + images are pushed to
+// the media branch). Kept as a lean list the SW precaches; the actual image URL
+// + attribution ride along in /api/details.
 export default async function handler(req, res) {
-  send(res, [], { maxAge: 3600 });
+  if (!IMAGE_ENABLED) return send(res, [], { maxAge: 3600 });
+  const rows = await all(
+    "SELECT lemma FROM words WHERE image_path IS NOT NULL");
+  send(res, rows.map((r) => String(r.lemma).toLowerCase()), { maxAge: 600 });
 }

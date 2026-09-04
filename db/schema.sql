@@ -47,7 +47,16 @@ CREATE TABLE IF NOT EXISTS words (
     -- meta
     cefr_level      TEXT,
     frequency_rank  INTEGER,                -- lower = more frequent; drives review priority
-    image_path      TEXT,                   -- optional; Phase 4 (relative path)
+
+    -- optional per-word image (Phase 4). Fetched once by scripts/fetch_images.py
+    -- and self-hosted; never requested at runtime. NULL for abstract words /
+    -- particles / anything without a good match -> card falls back to text-only.
+    image_path       TEXT,                  -- relative path, e.g. 'images/hond.jpg'
+    image_source     TEXT,                  -- 'openverse' | 'wikimedia' | ...
+    image_attribution TEXT,                 -- ready-to-show credit line
+    image_source_url TEXT,                  -- where the image came from (landing page)
+    image_license    TEXT,                  -- e.g. 'CC BY 2.0', 'CC0', 'PDM'
+
     notes           TEXT,
     created_at      TEXT    NOT NULL DEFAULT (datetime('now')),
 
@@ -162,6 +171,9 @@ SELECT
     w.cefr_level,
     w.frequency_rank,
     w.image_path,
+    w.image_attribution,
+    w.image_source_url,
+    w.image_license,
     s.sentence_nl,
     s.sentence_en,
     s.sentence_blanked,

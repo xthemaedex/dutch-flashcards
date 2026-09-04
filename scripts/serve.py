@@ -106,6 +106,19 @@ def api_words(set_id=None, pos=None, q=None, limit=500, offset=0):
     return {"total": total, "words": [dict(r) for r in rows]}
 
 
+def image_obj(row):
+    """Ready-to-render image info for a word row, or None. serve.py serves the
+    file at /img/<lemma> (Vercel rewrites this to the CDN URL)."""
+    if not row["image_path"]:
+        return None
+    return {
+        "url": "/img/" + row["lemma"].lower(),
+        "attribution": row["image_attribution"],
+        "license": row["image_license"],
+        "source_url": row["image_source_url"],
+    }
+
+
 def api_word(word_id):
     conn = db()
     w = conn.execute("SELECT * FROM words WHERE id = ?", (word_id,)).fetchone()
@@ -113,6 +126,7 @@ def api_word(word_id):
         conn.close()
         return None
     out = dict(w)
+    out["image"] = image_obj(w)
     out["sentences"] = [dict(r) for r in conn.execute(
         "SELECT * FROM example_sentences WHERE word_id=? ORDER BY sort_order", (word_id,))]
     if w["part_of_speech"] == "verb":
@@ -155,6 +169,7 @@ def api_details():
             "auxiliary": w["auxiliary"], "past_participle": w["past_participle"],
             "is_separable": w["is_separable"], "is_irregular": w["is_irregular"],
             "part_of_speech": w["part_of_speech"],
+            "image": image_obj(w),
             "sentences": [], "audio": {},
         }
     for r in conn.execute(
@@ -258,13 +273,11 @@ class Handler(BaseHTTPRequestHandler):
             if p == "/api/details":
                 return self._send(200, api_details())
             if p == "/api/images":
-                # lemmas that have an image file — frontend only renders <img> for these
-                have = []
-                if os.path.isdir(IMG_DIR):
-                    for fn in os.listdir(IMG_DIR):
-                        stem, ext = os.path.splitext(fn.lower())
-                        if ext in IMG_EXTS:
-                            have.append(stem)
+                # lemmas that have an image in the DB (fetched by fetch_images.py)
+                conn = db()
+                have = [r[0].lower() for r in conn.execute(
+                    "SELECT lemma FROM words WHERE image_path IS NOT NULL")]
+                conn.close()
                 return self._send(200, have)
             if p == "/api/words":
                 return self._send(200, api_words(
