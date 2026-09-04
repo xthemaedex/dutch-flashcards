@@ -35,7 +35,7 @@ dutch-flashcard-app/
 │   ├── sw.js                  #   service worker: offline cache + daily reminder
 │   ├── manifest.webmanifest   #   installable PWA metadata
 │   └── icon-*.png             #   app icons (generated)
-├── images/                    # optional per-word pics — drop <lemma>.jpg here
+├── images/                    # per-word CC photos, fetched by fetch_images.py
 └── audio/{word,sentence}/     # cached .mp3, referenced by relative path in the DB
 ```
 
@@ -79,9 +79,32 @@ python3 scripts/serve.py        # then open http://localhost:8000
 - **Mark as known** — "✓ I already know this" on the review card and browse card
   (with undo) — skip the grind, still counts toward the streak.
 - **Dark mode** — the ◐ button, top right (persisted; also follows the OS by default).
-- **Per-word images** — drop `images/<lemma>.jpg`; it shows on the card front.
-  `serve.py` exposes `/api/images` so the app only requests pics that exist.
-  Nothing auto-populated — display wiring only.
+- **Per-word images** — concrete nouns get a Creative-Commons photo on the card
+  front, sized as a co-equal focal point with the word (image ~55–65 % of the
+  card height on mobile, the lemma large and bold directly below, de/het + 🔊
+  small and secondary). Abstract words, particles and most verbs/adjectives get
+  no image and fall back to the text-only card; a broken image does the same.
+  - **Which words** — `scripts/pick_image_words.py` builds `data/image_candidates.txt`:
+    corpus nouns with a de/het article, no verb-homograph collision (every
+    finite form of every corpus verb is excluded via `conjugator.py`), and an
+    English gloss whose head word scores ≥ 4.25 concreteness in the Brysbaert
+    ratings. Blind keyword search only works for concrete, picturable nouns —
+    the full frequency list is far too noisy. Default output ≈ 600 words.
+  - **Fetching** — `scripts/fetch_images.py` sources from the **Openverse** API
+    (no account; ~200 req/day anonymous, so it's throttled). Picks a
+    card-friendly CC image, downscales to `images/<lemma>.jpg`, writes the pick
+    + attribution into the content JSON (`words.image_*`). Flags: `--only-list`
+    (the curated set), `--strict-title` (only images whose title matches the
+    query), `--requests N` (daily cap, resumable), `--top`, `--redo`, `--dry-run`.
+    `data/image_stoplist.txt` blocks lemmas *and deletes* any already-fetched
+    image for them; `data/image_misses.txt` (auto) skips dead ends on re-runs.
+    A daily scheduled task grows coverage; QA is a contact-sheet pass adding
+    duds to the stoplist.
+  - Served locally by `serve.py` at `/img/<lemma>`; in production from the same
+    jsDelivr media branch as audio (`IMAGE_BASE_URL`). The image URL + credit
+    ride along in `/api/details`. To push to the live DB use
+    `scripts/push_images_to_turso.mjs` (ALTER + UPDATE only — **not**
+    `migrate_to_turso.mjs --only words`, which would cascade-delete audio).
 
 ### Phase 5 — PWA (install · offline · reminder)
 
@@ -309,25 +332,39 @@ Live stack: **GitHub → Turso (libSQL) → Vercel**. Local dev is unchanged
   replacing `serve.py`'s endpoints. Large payloads (`/api/details`) are gzipped
   in-function to stay under Vercel's 4.5 MB response limit.
 - **Static:** `public/` (was `viewer/`) — served at the site root by Vercel.
-- **Audio:** not deployed yet. Functions emit `null` audio paths unless
-  `AUDIO_BASE_URL` is set (→ a Cloudflare R2 bucket, later); the app shows 🔇.
+- **Audio & images:** functions emit `null` unless `AUDIO_BASE_URL` /
+  `IMAGE_BASE_URL` are set (both → the jsDelivr media branch); the app then
+  shows 🔇 / a text-only card.
 - **Env vars on Vercel:** `TURSO_DATABASE_URL`, `TURSO_AUTH_TOKEN`
-  (read-only token), optionally `AUDIO_BASE_URL`.
+  (read-only token), optionally `AUDIO_BASE_URL` and `IMAGE_BASE_URL`.
 
-### Audio hosting (jsDelivr)
+### Media hosting (jsDelivr)
 
-Generated clips live on the orphan **`audio`** branch and are served free by
-**jsDelivr** (`https://cdn.jsdelivr.net/gh/<user>/dutch-flashcards@audio/audio/...`),
-which the API references via `AUDIO_BASE_URL`. No op limits, global CDN.
+Generated audio clips **and** per-word images live on the orphan **`audio`**
+branch and are served free by **jsDelivr**
+(`https://cdn.jsdelivr.net/gh/<user>/dutch-flashcards@audio/{audio,images}/...`),
+referenced by the API via `AUDIO_BASE_URL` / `IMAGE_BASE_URL`. No op limits,
+global CDN.
 
 ```bash
+# --- audio ---
 # generate more clips (background; edge-tts is slow/flaky, re-run as needed)
 python3 scripts/generate_audio.py --provider edge --voice nl-NL-MaartenNeural --redo-errors
 #   ...or faster, no rate limits:  --provider piper --piper-model voices/<nl>.onnx
+# push clips to the CDN + refresh the audio_assets table (idempotent):
+bash scripts/refresh_audio.sh        # publish_audio.mjs + migrate --only audio_assets
 
-# then push to the CDN + refresh the DB (idempotent):
-bash scripts/refresh_audio.sh
+# --- images (one-time rollout) ---
+python3 scripts/pick_image_words.py                       # -> data/image_candidates.txt
+python3 scripts/fetch_images.py --json data/corpus_words.json \
+        --only-list data/image_candidates.txt --strict-title --requests 150
+#   ^ throttled; repeat daily until "Scope complete" (a scheduled task does this)
+node scripts/publish_audio.mjs                            # pushes images/ to the branch too
+node --env-file=.env scripts/push_images_to_turso.mjs     # ALTER + UPDATE words on Turso
+#   then: set IMAGE_BASE_URL on Vercel + redeploy (SW is already at v13)
 ```
 
-New clips appear on the live site within ~12 h (jsDelivr branch cache), sooner
-after the automatic purge. The service worker caches each played clip.
+New files appear on the live site within ~12 h (jsDelivr branch cache), sooner
+after the automatic purge. The service worker caches each played clip / shown image.
+`push_images_to_turso.mjs` only ALTERs the columns in and UPDATEs the rows — it
+never `DELETE`s from `words`, so the deployed audio is untouched.
